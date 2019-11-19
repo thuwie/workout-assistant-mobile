@@ -4,27 +4,41 @@ import * as Font from 'expo-font';
 import React, { useState } from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
-import AppNavigator from './navigation/AppNavigator';
 import LoginScreen from './screens/LoginScreen';
+import StartScreen from './screens/StartScreen';
+
+const AppNavigator = createStackNavigator(
+  {
+    Start: { screen: StartScreen },
+    Login: { screen: LoginScreen },
+  },
+  {
+    initialRouteName: 'Login',
+    headerMode: 'none',
+  },
+);
+
+const AppContainer = createAppContainer(AppNavigator);
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {
     return (
-      /*<AppLoading
+      <AppLoading
         startAsync={loadResourcesAsync}
         onError={handleLoadingError}
         onFinish={() => handleFinishLoading(setLoadingComplete)}
-      />*/
-      <LoginScreen/>
+      />
     );
   } else {
     return (
       <View style={styles.container}>
         {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-        <AppNavigator />
+        <AppContainer />
       </View>
     );
   }

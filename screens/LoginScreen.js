@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, StatusBar, View, KeyboardAvoidingView } from 'react-native';
+import { withNavigation } from 'react-navigation';
 
 import strings from '../constants/Strings';
 import colors from '../constants/Colors';
@@ -7,11 +8,12 @@ import system from '../constants/System';
 import FormTextInput from '../components/FormTextInput';
 import Button from '../components/Button';
 
-export default class LoginScreen extends Component {
+class LoginScreen extends Component {
   passwordInputRef = React.createRef();
 
   constructor(props) {
     super(props);
+    this.props = props;
     this.state = {
       username: '',
       password: '',
@@ -43,6 +45,7 @@ export default class LoginScreen extends Component {
 
   handleLoginPress = () => {
     console.log('login pressed');
+    this.props.navigation.navigate('Start');
   };
 
   render() {
@@ -108,3 +111,5 @@ const styles = StyleSheet.create({
     width: '80%',
   },
 });
+
+export default withNavigation(LoginScreen);
