@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, StatusBar, View, KeyboardAvoidingView, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text } from 'react-native';
 import { withNavigation } from 'react-navigation';
 
-import strings from '../constants/Strings';
+import strings from '../constants/strings/en_Strings';
 import colors from '../constants/Colors';
 import system from '../constants/System';
 import FormTextInput from '../components/FormTextInput';
@@ -22,14 +22,6 @@ class LoginScreen extends React.Component {
       isLoading: true,
     };
   }
-
-  renderSpinner = () => {
-    return (
-      <View style={styles.spinner}>
-        <ActivityIndicator size="large" color={colors.LIGHT_BLUE}/>
-      </View>
-    );
-  };
 
   handleUsernameChange = username => {
     this.setState({ username });
@@ -60,10 +52,6 @@ class LoginScreen extends React.Component {
   handleSignUpPress = () => {
     console.log('signup pressed');
     this.props.navigation.navigate('Signup');
-  };
-
-  unload = () => {
-    this.setState({ isLoading: false });
   };
 
   render() {
@@ -123,7 +111,7 @@ class LoginScreen extends React.Component {
   }
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ // TODO the global stylesheet
   container: {
     flex: 1,
     backgroundColor: colors.WHITE,

@@ -8,13 +8,17 @@ import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
 import LoginScreen from './screens/LoginScreen';
-import StartScreen from './screens/StartScreen';
-import SignupScreen from './screens/SignupScreen';
+import StartScreen from './screens/inner/StartScreen';
+import SignupScreen from './screens/signup/SignupScreen';
+import PersonDataSignupScreen from './screens/signup/PersonDataSignup';
+import PersonPhysicSignupScreen from './screens/signup/PersonPhysicSignup';
 
 const AppNavigator = createStackNavigator(
   {
     Start: { screen: StartScreen },
     Signup: { screen: SignupScreen },
+    PersonDataSignup: { screen: PersonDataSignupScreen },
+    PersonPhysicSignup: { screen: PersonPhysicSignupScreen },
     Login: { screen: LoginScreen },
   },
   {
@@ -26,7 +30,7 @@ const AppNavigator = createStackNavigator(
 const AppContainer = createAppContainer(AppNavigator);
 
 export default function App(props) {
-  global.apiUrl = 'http://192.168.1.10:8089/api';
+  global.apiUrl = 'http://192.168.1.162:8089/api';
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {

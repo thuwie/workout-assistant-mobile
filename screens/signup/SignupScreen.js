@@ -2,13 +2,11 @@ import React from 'react';
 import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text } from 'react-native';
 import { withNavigation } from 'react-navigation';
 
-import strings from '../constants/Strings';
-import colors from '../constants/Colors';
-import system from '../constants/System';
-import FormTextInput from '../components/FormTextInput';
-import Button from '../components/Button';
-import propsToAccessibilityComponent
-  from 'react-native-web/dist/modules/AccessibilityUtil/propsToAccessibilityComponent';
+import strings from '../../constants/strings/en_Strings';
+import colors from '../../constants/Colors';
+import system from '../../constants/System';
+import FormTextInput from '../../components/FormTextInput';
+import Button from '../../components/Button';
 
 class SignupScreen extends React.Component {
   emailInputRef = React.createRef();
@@ -44,8 +42,10 @@ class SignupScreen extends React.Component {
           email,
         }),
       });
-      global.accessToken = await response.json();
-      this.props.navigation.navigate('Start');
+      const body = await response.json();
+      global.accessToken = body.accessToken;
+      global.userId = body.userId;
+      this.props.navigation.navigate('PersonDataSignup');
     } catch (error) {
       console.log(error);
     }

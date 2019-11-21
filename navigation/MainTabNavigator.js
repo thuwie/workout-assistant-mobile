@@ -3,10 +3,13 @@ import { Platform } from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
-import HomeScreen from '../screens/HomeScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import PresetScreen from '../screens/PresetScreen';
-import CalendarScreen from '../screens/CalendarScreen';
+import HomeScreen from '../screens/inner/HomeScreen';
+import ProfileScreen from '../screens/inner/ProfileScreen';
+import PresetScreen from '../screens/inner/PresetScreen';
+import CalendarScreen from '../screens/inner/CalendarScreen';
+
+
+
 
 const config = Platform.select({
   web: { headerMode: 'screen' },
