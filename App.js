@@ -9,10 +9,12 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import LoginScreen from './screens/LoginScreen';
 import StartScreen from './screens/StartScreen';
+import SignupScreen from './screens/SignupScreen';
 
 const AppNavigator = createStackNavigator(
   {
     Start: { screen: StartScreen },
+    Signup: { screen: SignupScreen },
     Login: { screen: LoginScreen },
   },
   {
@@ -24,6 +26,7 @@ const AppNavigator = createStackNavigator(
 const AppContainer = createAppContainer(AppNavigator);
 
 export default function App(props) {
+  global.apiUrl = 'http://192.168.1.10:8089/api';
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, StatusBar, View, KeyboardAvoidingView, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text } from 'react-native';
 import { withNavigation } from 'react-navigation';
 
 import strings from '../constants/Strings';
@@ -7,8 +7,11 @@ import colors from '../constants/Colors';
 import system from '../constants/System';
 import FormTextInput from '../components/FormTextInput';
 import Button from '../components/Button';
+import propsToAccessibilityComponent
+  from 'react-native-web/dist/modules/AccessibilityUtil/propsToAccessibilityComponent';
 
-class LoginScreen extends React.Component {
+class SignupScreen extends React.Component {
+  emailInputRef = React.createRef();
   passwordInputRef = React.createRef();
 
   constructor(props) {
@@ -16,26 +19,53 @@ class LoginScreen extends React.Component {
     this.props = props;
     this.state = {
       username: '',
+      email: '',
       password: '',
       usernameTouched: false,
+      emailTouched: false,
       passwordTouched: false,
-      isLoading: true,
     };
   }
 
-  renderSpinner = () => {
-    return (
-      <View style={styles.spinner}>
-        <ActivityIndicator size="large" color={colors.LIGHT_BLUE}/>
-      </View>
-    );
+  handleSignUpPress = async () => {
+    const { username, password, email } = this.state;
+    const url = global.apiUrl + '/signup';
+    console.log(username, password, email, url);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          email,
+        }),
+      });
+      global.accessToken = await response.json();
+      this.props.navigation.navigate('Start');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   handleUsernameChange = username => {
     this.setState({ username });
   };
 
+  handleEmailChange = email => {
+    this.setState({ email });
+  };
+
   handleUsernameSubmitPress = () => {
+    if (this.emailInputRef.current) {
+      this.emailInputRef.current.focus();
+    }
+  };
+
+  handleEmailSubmitPress = () => {
     if (this.passwordInputRef.current) {
       this.passwordInputRef.current.focus();
     }
@@ -52,37 +82,19 @@ class LoginScreen extends React.Component {
     this.setState({ password });
   };
 
-  handleLoginPress = () => {
-    console.log('login pressed');
-    this.props.navigation.navigate('Start');
-  };
-
-  handleSignUpPress = () => {
-    console.log('signup pressed');
-    this.props.navigation.navigate('Signup');
-  };
-
-  unload = () => {
-    this.setState({ isLoading: false });
-  };
-
   render() {
     const {
       username,
       password,
+      email,
+      emailTouched,
       usernameTouched,
       passwordTouched,
     } = this.state;
+
     const usernameError = !username && usernameTouched ? strings.USERNAME_REQUIRED : undefined;
     const passwordError = !password && passwordTouched ? strings.PASSWORD_REQUIRED : undefined;
-
-    if (global.accessToken) {
-      console.log(global.accessToken);
-      console.log('Navigating');
-      this.props.navigation.navigate('Start');
-    } else {
-      console.log('No token');
-    }
+    const emailError = !email && emailTouched ? strings.EMAIL_REQUIRED : undefined;
 
     return (
       <KeyboardAvoidingView style={styles.container} behavior='padding'>
@@ -91,6 +103,19 @@ class LoginScreen extends React.Component {
           backgroundColor="#FFFFFF"
         />
         <View style={styles.form}>
+          <FormTextInput
+            ref={this.emailInputRef}
+            value={this.state.email}
+            onChangeText={this.handleEmailChange}
+            onSubmitEditing={this.handleEmailSubmitPress}
+            placeholder={strings.EMAIL_PLACEHOLDER}
+            autoCorrect={false}
+            returnKeyType="next"
+            keyboardType='email-address'
+            onBlur={this.handleEmailBlur}
+            error={emailError}
+            blurOnSubmit={system.IS_IOS}
+          />
           <FormTextInput
             value={this.state.username}
             onChangeText={this.handleUsernameChange}
@@ -112,11 +137,7 @@ class LoginScreen extends React.Component {
             onBlur={this.handlePasswordBlur}
             error={passwordError}
           />
-          <Button label={strings.LOGIN} onPress={this.handleLoginPress}/>
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>New user? </Text>
-            <Text style={[styles.registerText, styles.signupText]} onPress={this.handleSignUpPress}>Sign up</Text>
-          </View>
+          <Button label={strings.SIGN_UP} onPress={this.handleSignUpPress}/>
         </View>
       </KeyboardAvoidingView>
     );
@@ -141,23 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '80%',
   },
-  spinner: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerText: {
-    color: colors.GREY,
-    alignSelf: 'center',
-  },
-  signupText: {
-    color: colors.LIGHT_BLUE,
-    alignSelf: 'center',
-  },
 });
 
-export default withNavigation(LoginScreen);
+export default withNavigation(SignupScreen);
+
