@@ -49,9 +49,9 @@ class LoginScreen extends React.Component {
   loadUserData = async () => {
     const url = global.apiUrl + '/user/' + global.userId;
     try {
-
+      const body = await request(url, 'GET');
+      console.log(body);
     } catch (error) {
-
       console.log(error);
     }
 
@@ -59,16 +59,18 @@ class LoginScreen extends React.Component {
 
   handleLoginPress = async () => {
     console.log('login pressed');
-    const {username, password} = this.state;
+    const { username, password } = this.state;
     const url = global.apiUrl + '/login';
     try {
-      const body = await request(url, 'POST', {username, password});
+      const body = await request(url, 'POST', { username, password });
       global.accessToken = body.accessToken;
       global.userId = body.userId;
       console.log(body);
-      if (!body.error) {
-        this.props.navigation.navigate('Start');
+      if (body.error) {
+        return;
       }
+      await this.loadUserData();
+      this.props.navigation.navigate('Start');
     } catch (error) {
       console.log(error);
     }
