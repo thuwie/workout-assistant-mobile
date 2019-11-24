@@ -7,6 +7,7 @@ import colors from '../../constants/Colors';
 import system from '../../constants/System';
 import FormTextInput from '../../components/FormTextInput';
 import Button from '../../components/Button';
+import request from '../../utils/customRequest';
 
 class SignupScreen extends React.Component {
   emailInputRef = React.createRef();
@@ -28,21 +29,8 @@ class SignupScreen extends React.Component {
   handleSignUpPress = async () => {
     const { username, password, email } = this.state;
     const url = global.apiUrl + '/signup';
-    console.log(username, password, email, url);
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          email,
-        }),
-      });
-      const body = await response.json();
+      const body = await request(url, 'POST', {username, password, email});
       global.accessToken = body.accessToken;
       global.userId = body.userId;
       this.props.navigation.navigate('PersonDataSignup');

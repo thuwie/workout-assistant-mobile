@@ -8,6 +8,7 @@ import colors from '../../constants/Colors';
 import system from '../../constants/System';
 import FormTextInput from '../../components/FormTextInput';
 import Button from '../../components/Button';
+import request from '../../utils/customRequest';
 
 class PersonDataSignupScreen extends React.Component {
   secondNameInputRef = React.createRef();
@@ -28,19 +29,7 @@ class PersonDataSignupScreen extends React.Component {
     const url = global.apiUrl + '/user/' + global.userId;
     console.log(firstName, secondName, birthDate, url);
     try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${global.accessToken}`,
-        },
-        body: JSON.stringify({
-          firstName,
-          secondName,
-          birthDate,
-        }),
-      });
+      const body = await request(url, 'PUT', {firstName, secondName, birthDate,});
       this.props.navigation.navigate('PersonPhysicSignup');
     } catch (error) {
       console.log(error);

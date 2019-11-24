@@ -8,6 +8,8 @@ import system from '../constants/System';
 import FormTextInput from '../components/FormTextInput';
 import Button from '../components/Button';
 
+import request from '../utils/customRequest';
+
 class LoginScreen extends React.Component {
   passwordInputRef = React.createRef();
 
@@ -44,9 +46,32 @@ class LoginScreen extends React.Component {
     this.setState({ password });
   };
 
-  handleLoginPress = () => {
+  loadUserData = async () => {
+    const url = global.apiUrl + '/user/' + global.userId;
+    try {
+
+    } catch (error) {
+
+      console.log(error);
+    }
+
+  };
+
+  handleLoginPress = async () => {
     console.log('login pressed');
-    this.props.navigation.navigate('Start');
+    const {username, password} = this.state;
+    const url = global.apiUrl + '/login';
+    try {
+      const body = await request(url, 'POST', {username, password});
+      global.accessToken = body.accessToken;
+      global.userId = body.userId;
+      console.log(body);
+      if (!body.error) {
+        this.props.navigation.navigate('Start');
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   handleSignUpPress = () => {
