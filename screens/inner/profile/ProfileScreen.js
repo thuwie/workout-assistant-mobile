@@ -62,7 +62,7 @@ class ProfileScreen extends React.Component {
 
         <View style={styles.header}>
         </View>
-        <Icon onPress={this.handleSettingsButton} size={35} color={colors.SILVER} containerStyle={styles.icon} name={Platform.OS === 'ios' ? 'ios-settings' : 'settings'}/>
+        <Icon onPress={this.handleSettingsButton} size={35} color={colors.WHITE} containerStyle={styles.icon} name={Platform.OS === 'ios' ? 'ios-settings' : 'settings'}/>
         <Image style={styles.avatar} source={require('../../../assets/images/icons8-question-mark-64.png')}/>
         <View style={styles.body}>
           <View style={styles.bodyContent}>
