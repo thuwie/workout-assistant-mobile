@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text } from 'react-native';
+import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text, AsyncStorage } from 'react-native';
 import { withNavigation } from 'react-navigation';
 
 import strings from '../constants/strings/en_Strings';
@@ -21,7 +21,7 @@ class LoginScreen extends React.Component {
       password: '',
       usernameTouched: false,
       passwordTouched: false,
-      isLoading: true,
+      isLoading: false,
     };
   }
 
@@ -50,7 +50,12 @@ class LoginScreen extends React.Component {
     const url = global.apiUrl + '/user/' + global.userId;
     try {
       const body = await request(url, 'GET');
+      delete body['password'];
+      delete body['__v'];
+
       console.log(body);
+      await AsyncStorage.setItem('@user_data', JSON.stringify(body));
+      this.props.navigation.navigate('Start');
     } catch (error) {
       console.log(error);
     }
@@ -70,7 +75,6 @@ class LoginScreen extends React.Component {
         return;
       }
       await this.loadUserData();
-      this.props.navigation.navigate('Start');
     } catch (error) {
       console.log(error);
     }
@@ -90,14 +94,6 @@ class LoginScreen extends React.Component {
     } = this.state;
     const usernameError = !username && usernameTouched ? strings.USERNAME_REQUIRED : undefined;
     const passwordError = !password && passwordTouched ? strings.PASSWORD_REQUIRED : undefined;
-
-    if (global.accessToken) {
-      console.log(global.accessToken);
-      console.log('Navigating');
-      this.props.navigation.navigate('Start');
-    } else {
-      console.log('No token');
-    }
 
     return (
       <KeyboardAvoidingView style={styles.container} behavior='padding'>
