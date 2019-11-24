@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  AsyncStorage,
 } from 'react-native';
 
 import { Card, Icon } from 'react-native-elements';
@@ -24,10 +25,31 @@ import Button from '../../components/Button';
 import Separator from '../../components/Separator';
 
 class ProfileScreen extends React.Component {
+
   constructor(props) {
     super(props);
     this.props = props;
+    this.state = { isLoading: true };
   }
+
+  async componentDidMount() {
+    try {
+      await this.loadData();
+      this.setState({ isLoading: false });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  loadData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('@user_data');
+      this.setState({ userData: JSON.parse(value) });
+      console.log(value);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   renderHeader = () => {
     return (
@@ -41,7 +63,7 @@ class ProfileScreen extends React.Component {
               style={styles.userImage}
               source={require('../../assets/images/icons8-question-mark-64.png')}
             />
-            <Text style={styles.userNameText}>Name</Text>
+            <Text style={styles.userNameText}>{this.state.userData.firstName}</Text>
           </View>
         </ImageBackground>
       </View>
@@ -50,16 +72,21 @@ class ProfileScreen extends React.Component {
   };
 
   render() {
-    return (
-      <ScrollView style={styles.scroll}>
-        <View style={styles.container}>
-          <Card containerStyle={styles.cardContainer}>
-            {this.renderHeader()}
-            {Separator()}
-          </Card>
-        </View>
-      </ScrollView>
-    );
+    if (this.state.isLoading) {
+      return (<View/>);
+    } else {
+      return (
+        <ScrollView style={styles.scroll}>
+          <View style={styles.container}>
+            <Card containerStyle={styles.cardContainer}>
+              {this.renderHeader()}
+              {Separator()}
+            </Card>
+          </View>
+        </ScrollView>
+      );
+    }
+
   }
 }
 
