@@ -4,9 +4,10 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/inner/HomeScreen';
-import ProfileScreen from '../screens/inner/ProfileScreen';
+import ProfileScreen from '../screens/inner/profile/ProfileScreen';
 import PresetScreen from '../screens/inner/PresetScreen';
 import CalendarScreen from '../screens/inner/CalendarScreen';
+import ProfileSettingsScreen from '../screens/inner/profile/ProfileSettingsScreen';
 
 
 
@@ -18,6 +19,7 @@ const config = Platform.select({
 
 const ProfileStack = createStackNavigator({
     Profile: ProfileScreen,
+    ProfileSettings: ProfileSettingsScreen,
   },
   config,
 );
