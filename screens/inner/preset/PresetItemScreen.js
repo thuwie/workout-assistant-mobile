@@ -4,14 +4,17 @@ import {
   AsyncStorage,
   StyleSheet,
   View,
-  Platform,
+  Platform, TouchableOpacity, FlatList,
 } from 'react-native';
-import { Icon } from "react-native-elements";
+import {Icon, ListItem} from "react-native-elements";
 
 import {withNavigation} from "react-navigation";
+import colors from "../../../constants/Colors";
+import request from "../../../utils/customRequest";
 
 class PresetItemScreen extends React.Component {
   static navigationOptions = ({navigation, screenProps}) => ({
+    title: 'Preset',
     headerLeft: (
       <Icon
         containerStyle={styles.icon}
@@ -20,67 +23,76 @@ class PresetItemScreen extends React.Component {
         onPress={() => navigation.navigate('Preset')}
       />
     ),
-    headerRight: (
-      <View style={styles.iconContainer}>
-        <Icon type="ionicon" name={Platform.OS === "ios" ? "ios-checkmark" : "md-checkmark"} />
-      </View>
-    )
   });
 
   constructor(props) {
     super(props);
-    this.state = {
-      isLoading: true,
-    }
+    this.state = { itemData: {}, exercises: {} };
   }
 
-  async componentDidMount() {
+  getExerciseData = async (itemData) => {
+    const { _id } = itemData;
+    const url = global.apiUrl + '/preset/' + _id;
+    console.log(url);
     try {
-      await this.loadData();
-      this.setState({isLoading: false});
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  loadData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('@user_data');
-      this.setState({userData: JSON.parse(userData)});
-      console.log(userData);
-    } catch (err) {
-      console.log(err);
+      const body = await request(url, 'GET');
+      if (body.error) return;
+      const { exercises } = body;
+      this.setState({ exercises });
+    } catch (error) {
+      console.log(error);
     }
   };
 
+  async componentDidMount() {
+    try {
+      const itemData = this.props.navigation.getParam('itemData');
+      await this.getExerciseData(itemData);
+      this.setState({ itemData });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  keyExtractor = (item) => item._id.toString();
+
+  renderItem = ({item}) => (
+    <TouchableOpacity>
+      <ListItem
+        key={item._id}
+        title={item.name}
+        subtitle={item.description}
+        bottomDivider/>
+    </TouchableOpacity>
+  );
+
   render() {
-    return(<View/>);
+    return (
+      <FlatList style={styles.list}
+                data={this.state.exercises}
+                renderItem={this.renderItem}
+                keyExtractor={this.keyExtractor}
+      />);
   }
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: '#d6d7da',
-  },
   item: {
-    backgroundColor: '#75e3ff',
+    borderColor: colors.BLACK,
+    borderWidth: 1,
+    borderRadius: 10,
     padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    marginLeft: 10,
+    marginRight: 10,
+    marginTop: 30,
   },
-  title: {
+  itemTitle: {
     fontSize: 32,
+    paddingLeft: 40,
   },
-  icon: {
-    paddingLeft: 10
+  list: {
+    marginTop: 30,
   },
-  iconContainer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    width: 45
-  }
 });
 
 export default withNavigation(PresetItemScreen);

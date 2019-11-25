@@ -5,9 +5,10 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/inner/HomeScreen';
 import ProfileScreen from '../screens/inner/profile/ProfileScreen';
-import PresetScreen from '../screens/inner/PresetScreen';
-import CalendarScreen from '../screens/inner/CalendarScreen';
 import ProfileSettingsScreen from '../screens/inner/profile/ProfileSettingsScreen';
+import PresetScreen from '../screens/inner/preset/PresetScreen';
+import PresetItemScreen from "../screens/inner/preset/PresetItemScreen";
+import CalendarScreen from '../screens/inner/CalendarScreen';
 
 
 
@@ -58,6 +59,7 @@ HomeStack.path = '';
 const PresetStack = createStackNavigator(
   {
     Preset: PresetScreen,
+    PresetItem: PresetItemScreen,
   },
   config,
 );

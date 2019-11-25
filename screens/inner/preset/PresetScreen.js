@@ -3,19 +3,18 @@ import React from 'react';
 import {
   AsyncStorage,
   StyleSheet,
-  Text,
-  SafeAreaView,
   View,
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-
-import {MonoText} from '../../components/StyledText';
+import colors from '../../../constants/Colors';
+import {ListItem} from 'react-native-elements';
 import {withNavigation} from "react-navigation";
-import colors from "../../constants/Colors";
 
-//this.props.navigation.navigate('Start');
 class PresetScreen extends React.Component {
+  static navigationOptions = {
+    header: null,
+  };
 
   constructor(props) {
     super(props);
@@ -43,34 +42,27 @@ class PresetScreen extends React.Component {
     }
   };
 
-  Item = (item) => {
-    return (
-      <TouchableOpacity
-        onPress={() => this.props.navigation.navigate("PresetItem")}>
-        <View style={styles.item}>
-          <Text style={styles.title}>{item.name}</Text>
-        </View>
-      </TouchableOpacity>
-    )
-  }
+  keyExtractor = (item) => item._id.toString();
+
+  renderItem = ({item}) => (
+    <TouchableOpacity
+      onPress={() => this.props.navigation.navigate("PresetItem", {itemData: item})}>
+      <ListItem
+        key={item._id}
+        title={item.name}
+        bottomDivider/>
+    </TouchableOpacity>
+  );
+
 
   render() {
     if (this.state.isLoading)
       return (<View/>);
     return (
-      <FlatList
-        data={this.state.userData.presets}
-        renderItem={({item}) => {
-          return (
-            <TouchableOpacity
-              onPress={() => this.props.navigation.navigate("PresetItem")}>
-              <View style={styles.item}>
-                <Text style={styles.title}>{item.name}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        keyExtractor={item => item._id}
+      <FlatList style={styles.list}
+                data={this.state.userData.presets}
+                renderItem={this.renderItem}
+                keyExtractor={this.keyExtractor}
       />);
   }
 }
@@ -82,13 +74,20 @@ const styles = StyleSheet.create({
     borderColor: '#d6d7da',
   },
   item: {
-    backgroundColor: '#75e3ff',
+    borderColor: colors.BLACK,
+    borderWidth: 1,
+    borderRadius: 10,
     padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    marginLeft: 10,
+    marginRight: 10,
+    marginTop: 30,
   },
-  title: {
+  itemTitle: {
     fontSize: 32,
+    paddingLeft: 40,
+  },
+  list: {
+    marginTop: 30,
   },
 });
 
