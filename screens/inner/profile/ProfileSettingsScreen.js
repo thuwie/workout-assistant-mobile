@@ -48,7 +48,7 @@ class ProfileSettingsScreen extends React.Component {
               if (response.error) {
                 throw new Error('Unauthorized');
               }
-              navigation.navigate('Profile', {updated: true});
+              navigation.navigate('Profile', { updated: true });
               console.log(response);
             } catch (error) {
               console.log(error);
@@ -93,6 +93,13 @@ class ProfileSettingsScreen extends React.Component {
   updateState = (field) => {
     const [pair] = Object.entries(field);
     const [key, value] = pair;
+    if (key === 'height' || key === 'weight' || key === 'goal') {
+      if (value !== '') {
+        if (!(/^\d+$/.test(value))) {
+          return;
+        }
+      }
+    }
     const userData = this.state.userData;
     userData[key] = value;
     this.setState({ userData });
@@ -253,7 +260,7 @@ class ProfileSettingsScreen extends React.Component {
           onChangeText={this.handleHeightChange}
           placeholder={strings.HEIGHT_PLACEHOLDER}
           autoCorrect={false}
-          keyboardType='number-pad'
+          keyboardType='numeric'
           returnKeyType="done"
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
@@ -307,7 +314,6 @@ class ProfileSettingsScreen extends React.Component {
   };
 
   render() {
-
     return (
       <KeyboardAvoidingView style={styles.container} behavior='padding'>
         <ScrollView>
@@ -318,6 +324,7 @@ class ProfileSettingsScreen extends React.Component {
           {this.renderUsername()}
           {this.renderFirstname()}
           {this.renderSecondname()}
+          {this.renderEmail()}
           {this.renderBirthday()}
           {this.renderHeight()}
           {this.renderWeight()}
