@@ -22,9 +22,20 @@ class ProfileScreen extends React.Component {
   async componentDidMount() {
     try {
       await this.loadData();
-      this.setState({ isLoading: false });
+      this.setState({ isLoading: false, updated: false });
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async componentDidUpdate() {
+    const updated = this.props.navigation.getParam('updated');
+    if (updated) {
+      try {
+        await this.loadData();
+      } catch (err) {
+        console.log(err);
+      }
     }
   }
 
@@ -35,21 +46,20 @@ class ProfileScreen extends React.Component {
 
   loadData = async () => {
     try {
-      // const value = await AsyncStorage.getItem('@user_data');
-      const value = '{firstName: "test", secondName:"test"}';
-      // this.setState({ userData: JSON.parse(value) });
-      this.setState({
-        userData: {
-          firstName: 'kir',
-          secondName: 'kon',
-          username: 'mock',
-          height: 200,
-          weight: 201,
-          goal: 202,
-          birthDate: '2000-01-01',
-        },
-      });
-      console.log(value);
+      const value = await AsyncStorage.getItem('@user_data');
+      // const value = '{firstName: "test", secondName:"test"}';
+      this.setState({ userData: JSON.parse(value) });
+      // this.setState({
+      //   userData: {
+      //     firstName: 'kir',
+      //     secondName: 'kon',
+      //     username: 'mock',
+      //     height: 200,
+      //     weight: 201,
+      //     goal: 202,
+      //     birthDate: '2000-01-01',
+      //   },
+      // });
     } catch (err) {
       console.log(err);
     }
