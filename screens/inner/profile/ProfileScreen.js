@@ -1,14 +1,12 @@
 import React from 'react';
 import {
-  Image,
   Platform,
   StyleSheet,
-  Text,
   View,
-  AsyncStorage,
+  AsyncStorage, StatusBar, ScrollView,
 } from 'react-native';
 
-import { Card, Icon } from 'react-native-elements';
+import { ListItem, Icon, Avatar } from 'react-native-elements';
 import colors from '../../../constants/Colors';
 
 class ProfileScreen extends React.Component {
@@ -41,7 +39,7 @@ class ProfileScreen extends React.Component {
 
   handleSettingsButton = () => {
     console.log('click');
-    this.props.navigation.navigate('ProfileSettings', {userData: this.state.userData});
+    this.props.navigation.navigate('ProfileSettings', { userData: this.state.userData });
   };
 
   loadData = async () => {
@@ -54,6 +52,7 @@ class ProfileScreen extends React.Component {
       //     firstName: 'kir',
       //     secondName: 'kon',
       //     username: 'mock',
+      //     email: 'mail',
       //     height: 200,
       //     weight: 201,
       //     goal: 202,
@@ -65,25 +64,66 @@ class ProfileScreen extends React.Component {
     }
   };
 
-  renderProfile = () => {
-    const { firstName, secondName, username, birthDate, weight, height, goal } = this.state.userData;
+  renderAvatar = () => {
     return (
-      <View style={styles.container}>
+      <Avatar
+        size='large'
+        rounded
+        title={`${(this.state.userData.firstName[0]).toUpperCase()}${(this.state.userData.secondName[0]).toUpperCase()}`}
+      />
+    );
+  };
 
-        <View style={styles.header}>
-        </View>
-        <Icon onPress={this.handleSettingsButton} size={35} color={colors.WHITE} containerStyle={styles.icon} name={Platform.OS === 'ios' ? 'ios-settings' : 'settings'}/>
-        <Image style={styles.avatar} source={require('../../../assets/images/icons8-question-mark-64.png')}/>
-        <View style={styles.body}>
-          <View style={styles.bodyContent}>
-            <Text style={styles.name}>{firstName} {secondName}</Text>
-            <Text style={styles.name}>@{username}</Text>
-            <Text style={styles.description}>{birthDate}</Text>
-            <Text style={styles.description}>Weight: {weight}</Text>
-            <Text style={styles.description}>Height: {height}</Text>
-            <Text style={styles.description}>Goal: {goal}</Text>
-          </View>
-        </View>
+  renderProfile = () => {
+    const { firstName, secondName, username, birthDate, weight, height, goal, email } = this.state.userData;
+    return (
+      <View>
+          <ListItem
+            key={0}
+            title={'@'+username}
+            bottomDivider
+          />
+          <ListItem
+            key={1}
+            title={firstName}
+            subtitle={'First name'}
+            bottomDivider
+          />
+          <ListItem
+            key={2}
+            title={secondName}
+            subtitle={'Second name'}
+            bottomDivider
+          />
+          <ListItem
+            key={3}
+            title={email}
+            subtitle={'Email'}
+            bottomDivider
+          />
+          <ListItem
+            key={4}
+            title={birthDate}
+            subtitle={'Birth date'}
+            bottomDivider
+          />
+          <ListItem
+            key={5}
+            title={height}
+            subtitle={'Height'}
+            bottomDivider
+          />
+          <ListItem
+            key={6}
+            title={weight}
+            subtitle={'Weight'}
+            bottomDivider
+          />
+          <ListItem
+            key={7}
+            title={goal}
+            subtitle={'Goal'}
+          />
       </View>
     );
   };
@@ -93,9 +133,26 @@ class ProfileScreen extends React.Component {
       return (<View/>);
     } else {
       return (
-        <View>
-          {this.renderProfile()}
-        </View>
+        <ScrollView>
+          <View style={styles.container}>
+            <StatusBar
+              barStyle="dark-content"
+              backgroundColor="#FFFFFF"
+            />
+            <View style={styles.headContainer}>
+              <View style={[styles.headSubContainer, { alignItems: 'flex-end' }]}>
+                <Icon onPress={this.handleSettingsButton} size={35} color={colors.GREY} containerStyle={styles.icon}
+                      name={Platform.OS === 'ios' ? 'ios-settings' : 'settings'}/>
+              </View>
+              <View style={styles.headSubContainer}>
+                {this.renderAvatar()}
+              </View>
+            </View>
+            <View style={styles.infoContainer}>
+              {this.renderProfile()}
+            </View>
+          </View>
+        </ScrollView>
       );
     }
 
@@ -107,49 +164,32 @@ ProfileScreen.navigationOptions = {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: colors.DODGER_BLUE,
-    height: 200,
-  },
-  avatar: {
-    width: 130,
-    height: 130,
-    borderRadius: 63,
-    borderWidth: 4,
-    borderColor: 'white',
-    marginBottom: 10,
-    alignSelf: 'center',
-    position: 'absolute',
-    marginTop: 130,
-  },
-  icon: {
-    position: 'absolute',
-    top:30,
-    right:10,
-  },
-  body: {
-    marginTop: 40,
-  },
-  bodyContent: {
-    flex: 1,
+  container: {
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 30,
+    padding: 20,
+    flex: 1,
+    flexDirection: 'column',
   },
-  name: {
-    fontSize: 28,
-    color: '#696969',
-    fontWeight: '600',
+  headContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  info: {
-    fontSize: 16,
-    color: '#00BFFF',
-    marginTop: 10,
+  infoContainer: {
+    flex: 2,
+    width: '100%',
   },
-  description: {
-    fontSize: 18,
-    color: '#696969',
-    marginTop: 30,
-    textAlign: 'left',
+  headSubContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  avatarContainer: {
+    flexGrow: 1,
+    flexShrink: 1,
   },
   buttonContainer: {
     marginTop: 10,
