@@ -54,7 +54,7 @@ class PresetItemScreen extends React.Component {
     }
   }
 
-  keyExtractor = (item) => item._id.toString();
+  //keyExtractor = (item) => item._id.toString();
 
   renderItem = ({item}) => (
     <TouchableOpacity>
@@ -71,7 +71,6 @@ class PresetItemScreen extends React.Component {
       <FlatList style={styles.list}
                 data={this.state.exercises}
                 renderItem={this.renderItem}
-                keyExtractor={this.keyExtractor}
       />);
   }
 }

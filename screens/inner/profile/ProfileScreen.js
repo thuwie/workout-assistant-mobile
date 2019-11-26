@@ -142,7 +142,7 @@ class ProfileScreen extends React.Component {
             <View style={styles.headContainer}>
               <View style={[styles.headSubContainer, { alignItems: 'flex-end' }]}>
                 <Icon onPress={this.handleSettingsButton} size={35} color={colors.GREY} containerStyle={styles.icon}
-                      name={Platform.OS === 'ios' ? 'ios-settings' : 'settings'}/>
+                      name={'settings'}/>
               </View>
               <View style={styles.headSubContainer}>
                 {this.renderAvatar()}

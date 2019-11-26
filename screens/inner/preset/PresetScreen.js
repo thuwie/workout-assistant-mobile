@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
+import TouchableScale from 'react-native-touchable-scale';
 import colors from '../../../constants/Colors';
 import {ListItem} from 'react-native-elements';
 import {withNavigation} from "react-navigation";
@@ -45,13 +46,17 @@ class PresetScreen extends React.Component {
   keyExtractor = (item) => item._id.toString();
 
   renderItem = ({item}) => (
-    <TouchableOpacity
+    <TouchableScale
       onPress={() => this.props.navigation.navigate("PresetItem", {itemData: item})}>
       <ListItem
+        Component={TouchableScale}
+        friction={90} //
+        tension={100} // These props are passed to the parent component (here TouchableScale)
+        activeScale={0.95} //
         key={item._id}
         title={item.name}
         bottomDivider/>
-    </TouchableOpacity>
+    </TouchableScale>
   );
 
 
