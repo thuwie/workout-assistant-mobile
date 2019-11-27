@@ -52,8 +52,7 @@ class LoginScreen extends React.Component {
       const body = await request(url, 'GET');
       delete body['password'];
       delete body['__v'];
-
-      console.log(body);
+      
       await AsyncStorage.setItem('@user_data', JSON.stringify(body));
       this.props.navigation.navigate('Start');
     } catch (error) {

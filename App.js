@@ -2,7 +2,7 @@ import { AppLoading } from 'expo';
 import { Asset } from 'expo-asset';
 import * as Font from 'expo-font';
 import React, { useState } from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { Platform, StatusBar, StyleSheet, View, AsyncStorage } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -12,6 +12,9 @@ import StartScreen from './screens/inner/StartScreen';
 import SignupScreen from './screens/signup/SignupScreen';
 import PersonDataSignupScreen from './screens/signup/PersonDataSignup';
 import PersonPhysicSignupScreen from './screens/signup/PersonPhysicSignup';
+
+import customRequest from './utils/customRequest';
+import methods from './constants/Methods';
 
 const AppNavigator = createStackNavigator(
   {
@@ -44,8 +47,8 @@ export default function App(props) {
   } else {
     return (
       <View style={styles.container}>
-        {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-        <AppContainer />
+        {Platform.OS === 'ios' && <StatusBar barStyle="default"/>}
+        <AppContainer/>
       </View>
     );
   }
@@ -64,7 +67,18 @@ async function loadResourcesAsync() {
       // remove this if you are not using it in your app
       'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
     }),
+    prepareDictionary(),
   ]);
+}
+
+async function prepareDictionary() {
+  const url = `${global.apiUrl}/exercise/dictionary/all`;
+  const resp = await customRequest(url, methods.GET);
+  const builded = {};
+  resp.map(({ _id, defaultWeight, description, name }) => {
+    builded[_id] = { defaultWeight, description, name };
+  });
+  await AsyncStorage.setItem('@exercises_dictionary', JSON.stringify(builded));
 }
 
 function handleLoadingError(error) {
