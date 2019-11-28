@@ -48,7 +48,7 @@ class PresetScreen extends React.Component {
   renderFooter = () => {
     return (
       <ListItem style={styles.item}
-        Component={TouchableScale}
+        Component={TouchableOpacity}
         title="Add new preset"
         leftIcon={{
           name: 'add',
@@ -61,7 +61,7 @@ class PresetScreen extends React.Component {
 
   renderItem = ({item}) => (
     <ListItem style={styles.item}
-              Component={TouchableScale}
+              Component={TouchableOpacity}
               onPress={() => this.props.navigation.navigate("PresetItem", {itemData: item})}
               friction={90}
               tension={100}
