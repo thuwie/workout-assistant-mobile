@@ -6,13 +6,11 @@ import {
   View,
   Platform, TouchableOpacity, FlatList,
 } from 'react-native';
-import {Icon, ListItem} from "react-native-elements";
+import {Icon, Avatar, Overlay, ListItem, Text} from "react-native-elements";
 
 import {withNavigation} from "react-navigation";
 import colors from "../../../constants/Colors";
 import request from "../../../utils/customRequest";
-import {isLoading} from "expo-font";
-import TouchableScale from "react-native-touchable-scale";
 
 class PresetItemScreen extends React.Component {
   static navigationOptions = ({navigation, screenProps}) => ({
@@ -29,7 +27,13 @@ class PresetItemScreen extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {itemData: {}, exercises: {}, dictRef: {}, isLoading: true};
+    this.state = {
+      itemData: {}
+      , exercises: {}
+      , dictRef: {}
+      , isLoading: true
+      , isOverlayVisible: false
+    };
   }
 
   getExerciseData = async (itemData) => {
@@ -52,24 +56,94 @@ class PresetItemScreen extends React.Component {
       const dictRef = await AsyncStorage.getItem('@exercises_dictionary');
       this.setState({dictRef: JSON.parse(dictRef)});
       this.setState({itemData});
-      this.setState( { isLoading: false });
+      this.setState({isLoading: false});
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async componentDidUpdate() {
+    try {
+      console.log("componentDidUpdate invoked");
     } catch (err) {
       console.log(err);
     }
   }
 
   keyExtractor = (item) => item._id.toString();
+  overlayKeyExtractor = ([id, object]) => id.toString();
+
+  renderAvatar = (exercise) => {
+    const {name, icon} = exercise;
+    if (icon) {
+      return (
+        <Avatar
+          rounded
+          size='medium'
+          source={{uri: icon}}
+        />
+      );
+    } else {
+      return (
+        <Avatar
+          rounded
+          size='medium'
+          title={`${name.substring(0, 3).toUpperCase()}`}
+          titleStyle={{fontSize: 14}}
+        />
+      );
+    }
+  };
+
+  renderOverlayItem = ({item}) => {
+    const [id, exerciseDescription] = item;
+
+    console.log(id, exerciseDescription);
+    return (
+      <ListItem
+        Component={TouchableOpacity}
+        onPress={() => this.setState({isOverlayVisible: false})}
+        key={id}
+        leftAvatar={this.renderAvatar(exerciseDescription)}
+        title={exerciseDescription.name}
+        subtitle={exerciseDescription.description}
+      />
+    );
+  };
+
+  renderOverlay = () => {
+    return (
+      <Overlay
+        isVisible={this.state.isOverlayVisible}
+        windowBackgroundColor="rgba(0, 0, 0, .5)"
+        width="80%"
+        height="auto"
+        onBackdropPress={() => {
+          this.setState({isOverlayVisible: false});
+          this.state.array.push(id);
+        }}
+      >
+        <FlatList
+          data={Object.entries(this.state.dictRef)}
+          renderItem={this.renderOverlayItem}
+          keyExtractor={this.overlayKeyExtractor}
+        />
+      </Overlay>
+    );
+  };
 
   renderFooter = () => {
     return (
       <ListItem
-        Component={TouchableScale}
+        Component={TouchableOpacity}
+        onPress={() => this.setState({isOverlayVisible: true})}
         title="Add new exercise"
         leftIcon={{
           name: 'add',
           color: colors.BLACK,
           size: 30,
-          backgroundColor: colors.BLACK}}
+          backgroundColor: colors.BLACK
+        }}
       />
     );
   };
@@ -83,15 +157,17 @@ class PresetItemScreen extends React.Component {
   );
 
   render() {
-    if(this.state.isLoading)
-      return(<View/>);
+    if (this.state.isLoading)
+      return (<View/>);
     return (
-      <FlatList style={styles.list}
-                data={this.state.exercises}
-                renderItem={this.renderItem}
-                keyExtractor={this.keyExtractor}
-                ListFooterComponent = {this.renderFooter}
-      />);
+      <View>
+        {this.renderOverlay()}
+        <FlatList style={styles.list}
+                  data={this.state.exercises}
+                  renderItem={this.renderItem}
+                  keyExtractor={this.keyExtractor}
+                  ListFooterComponent={this.renderFooter}
+        /></View>);
   }
 }
 
