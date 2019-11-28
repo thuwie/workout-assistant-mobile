@@ -11,6 +11,8 @@ import {Icon, ListItem} from "react-native-elements";
 import {withNavigation} from "react-navigation";
 import colors from "../../../constants/Colors";
 import request from "../../../utils/customRequest";
+import {isLoading} from "expo-font";
+import TouchableScale from "react-native-touchable-scale";
 
 class PresetItemScreen extends React.Component {
   static navigationOptions = ({navigation, screenProps}) => ({
@@ -27,18 +29,17 @@ class PresetItemScreen extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { itemData: {}, exercises: {} };
+    this.state = {itemData: {}, exercises: {}, dictRef: {}, isLoading: true};
   }
 
   getExerciseData = async (itemData) => {
-    const { _id } = itemData;
+    const {_id} = itemData;
     const url = global.apiUrl + '/preset/' + _id;
-    console.log(url);
     try {
       const body = await request(url, 'GET');
       if (body.error) return;
-      const { exercises } = body;
-      this.setState({ exercises });
+      const {exercises} = body;
+      this.setState({exercises});
     } catch (error) {
       console.log(error);
     }
@@ -48,29 +49,48 @@ class PresetItemScreen extends React.Component {
     try {
       const itemData = this.props.navigation.getParam('itemData');
       await this.getExerciseData(itemData);
-      this.setState({ itemData });
+      const dictRef = await AsyncStorage.getItem('@exercises_dictionary');
+      this.setState({dictRef: JSON.parse(dictRef)});
+      this.setState({itemData});
+      this.setState( { isLoading: false });
     } catch (err) {
       console.log(err);
     }
   }
 
-  //keyExtractor = (item) => item._id.toString();
+  keyExtractor = (item) => item._id.toString();
+
+  renderFooter = () => {
+    return (
+      <ListItem
+        Component={TouchableScale}
+        title="Add new exercise"
+        leftIcon={{
+          name: 'add',
+          color: colors.BLACK,
+          size: 30,
+          backgroundColor: colors.BLACK}}
+      />
+    );
+  };
 
   renderItem = ({item}) => (
-    <TouchableOpacity>
-      <ListItem
-        key={item._id}
-        title={item.name}
-        subtitle={item.description}
-        bottomDivider/>
-    </TouchableOpacity>
+    <ListItem
+      key={item._id}
+      title={this.state.dictRef[item.exerciseDictionaryId].name}
+      subtitle={this.state.dictRef[item.exerciseDictionaryId].description}
+      bottomDivider/>
   );
 
   render() {
+    if(this.state.isLoading)
+      return(<View/>);
     return (
       <FlatList style={styles.list}
                 data={this.state.exercises}
                 renderItem={this.renderItem}
+                keyExtractor={this.keyExtractor}
+                ListFooterComponent = {this.renderFooter}
       />);
   }
 }
@@ -91,6 +111,9 @@ const styles = StyleSheet.create({
   },
   list: {
     marginTop: 30,
+  },
+  icon: {
+    paddingLeft: 10,
   },
 });
 
