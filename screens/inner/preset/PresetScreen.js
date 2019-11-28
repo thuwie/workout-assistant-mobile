@@ -45,18 +45,34 @@ class PresetScreen extends React.Component {
 
   keyExtractor = (item) => item._id.toString();
 
-  renderItem = ({item}) => (
-    <TouchableScale
-      onPress={() => this.props.navigation.navigate("PresetItem", {itemData: item})}>
-      <ListItem
+  renderFooter = () => {
+    return (
+      <ListItem style={styles.item}
         Component={TouchableScale}
-        friction={90} //
-        tension={100} // These props are passed to the parent component (here TouchableScale)
-        activeScale={0.95} //
-        key={item._id}
-        title={item.name}
-        bottomDivider/>
-    </TouchableScale>
+        title="Add new preset"
+        leftIcon={{
+          name: 'add',
+          color: colors.BLACK,
+          size: 30,
+          backgroundColor: colors.BLACK}}
+      />
+    );
+  };
+
+  renderItem = ({item}) => (
+    <ListItem style={styles.item}
+              Component={TouchableScale}
+              onPress={() => this.props.navigation.navigate("PresetItem", {itemData: item})}
+              friction={90}
+              tension={100}
+              activeScale={0.95}
+              key={item._id}
+              leftIcon={{
+                name: 'bookmark',
+                color: colors.BLACK,
+                size: 30,
+                backgroundColor: colors.BLACK}}
+              title={item.name}/>
   );
 
 
@@ -68,6 +84,7 @@ class PresetScreen extends React.Component {
                 data={this.state.userData.presets}
                 renderItem={this.renderItem}
                 keyExtractor={this.keyExtractor}
+                ListFooterComponent={this.renderFooter}
       />);
   }
 }
