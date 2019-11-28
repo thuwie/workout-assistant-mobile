@@ -12,13 +12,14 @@ import StartScreen from './screens/inner/StartScreen';
 import SignupScreen from './screens/signup/SignupScreen';
 import PersonDataSignupScreen from './screens/signup/PersonDataSignup';
 import PersonPhysicSignupScreen from './screens/signup/PersonPhysicSignup';
+import MainTabNavigator from './navigation/MainTabNavigator'
 
 import customRequest from './utils/customRequest';
 import methods from './constants/Methods';
 
 const AppNavigator = createStackNavigator(
   {
-    Start: { screen: StartScreen },
+    Start: MainTabNavigator,
     Signup: { screen: SignupScreen },
     PersonDataSignup: { screen: PersonDataSignupScreen },
     PersonPhysicSignup: { screen: PersonPhysicSignupScreen },
