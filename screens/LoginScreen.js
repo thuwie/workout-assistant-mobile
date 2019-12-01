@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text, AsyncStorage } from 'react-native';
-import { withNavigation } from 'react-navigation';
+import {StyleSheet, StatusBar, View, KeyboardAvoidingView, Text, AsyncStorage} from 'react-native';
+import {withNavigation} from 'react-navigation';
 
 import strings from '../constants/strings/en_Strings';
 import colors from '../constants/Colors';
@@ -26,7 +26,7 @@ class LoginScreen extends React.Component {
   }
 
   handleUsernameChange = username => {
-    this.setState({ username });
+    this.setState({username});
   };
 
   handleUsernameSubmitPress = () => {
@@ -36,24 +36,48 @@ class LoginScreen extends React.Component {
   };
 
   handleUsernameBlur = () => {
-    this.setState({ usernameTouched: true });
+    this.setState({usernameTouched: true});
   };
   handlePasswordBlur = () => {
-    this.setState({ passwordTouched: true });
+    this.setState({passwordTouched: true});
   };
 
   handlePasswordChange = password => {
-    this.setState({ password });
+    this.setState({password});
+  };
+
+  // TODO: global storage interface
+  buildDateIndex = async (userTrainings) => {
+    const dateIndex = [];
+    userTrainings.forEach((trainingItem, _id) => {
+      const currDates = trainingItem.placed;
+      currDates.forEach((currDate) => {
+        const timestamp_tmp = Date.parse(currDate);
+        const data = {timestamp: timestamp_tmp, train_id: _id};
+        dateIndex.push(data);
+      })
+    });
+    dateIndex.sort((a, b) => {
+      return a.timestamp - b.timestamp;
+    });
+    await AsyncStorage.setItem('@train_date_index', JSON.stringify(dateIndex));
   };
 
   loadUserData = async () => {
-    const url = global.apiUrl + '/user/' + global.userId;
+    const usrUrl = global.apiUrl + '/user/' + global.userId;
+    const trainingsUrl = global.apiUrl + '/training/search?userId=' + global.userId;
     try {
-      const body = await request(url, 'GET');
-      delete body['password'];
-      delete body['__v'];
-      
-      await AsyncStorage.setItem('@user_data', JSON.stringify(body));
+      const usrBody = await request(usrUrl, 'GET');
+      const trainingsBody = await request(trainingsUrl, 'GET');
+
+      delete usrBody['password'];
+      delete usrBody['__v'];
+      delete trainingsBody['__v'];
+
+      await AsyncStorage.setItem('@user_data', JSON.stringify(usrBody));
+      await AsyncStorage.setItem('@user_trainings', JSON.stringify(trainingsBody));
+      await this.buildDateIndex(trainingsBody);
+
       this.props.navigation.navigate('Start');
     } catch (error) {
       console.log(error);
@@ -63,10 +87,10 @@ class LoginScreen extends React.Component {
 
   handleLoginPress = async () => {
     console.log('login pressed');
-    const { username, password } = this.state;
+    const {username, password} = this.state;
     const url = global.apiUrl + '/login';
     try {
-      const body = await request(url, 'POST', { username, password });
+      const body = await request(url, 'POST', {username, password});
       global.accessToken = body.accessToken;
       global.userId = body.userId;
       console.log(body);
