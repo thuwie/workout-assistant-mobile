@@ -1,4 +1,3 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
   AsyncStorage,
@@ -21,7 +20,7 @@ import request from '../../../utils/customRequest';
 class PresetItemScreen extends React.Component {
 
   static navigationOptions = ({ navigation, screenProps }) => ({
-    title: 'Preset',
+    title: `Edit: ${navigation.state.params.itemData.name}`,
     headerLeft: (
       <Icon
         containerStyle={styles.icon}
@@ -29,6 +28,29 @@ class PresetItemScreen extends React.Component {
         name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
         onPress={() => navigation.navigate('Preset')}
       />
+    ),
+    headerRight: (
+      <View style={styles.iconContainer}>
+        <Icon
+          type="ionicon"
+          name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
+          onPress={async () => {
+            const { params = {} } = navigation.state;
+            const { userData = {} } = params;
+            console.log(userData);
+            try {
+              await this.saveToStorage(userData);
+              const response = await this.updateUser(userData);
+              if (response.error) {
+                throw new Error('Unauthorized');
+              }
+              navigation.navigate('Profile', { updated: true });
+              console.log(response);
+            } catch (error) {
+              console.log(error);
+            }
+          }}/>
+      </View>
     ),
   });
 
@@ -38,7 +60,7 @@ class PresetItemScreen extends React.Component {
       itemData: {},
       exercises: {},
       dictRef: {},
-      language: 'java',
+      language: 0,
       isLoading: true,
       isOverlayVisible: false,
     };
@@ -72,15 +94,6 @@ class PresetItemScreen extends React.Component {
     }
   }
 
-  async componentDidUpdate() {
-    try {
-      console.log('componentDidUpdate invoked');
-      console.log(this.state.exercises);
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   formExerciseObject = async (exerciseDictionaryId) => {
     const url = `${global.apiUrl}/exercise`;
     try {
@@ -89,7 +102,7 @@ class PresetItemScreen extends React.Component {
       const exerciseObject = await request(url, methods.POST, body);
 
       exercises.push(exerciseObject);
-      this.setState({ exercises });
+      return exercises;
     } catch (error) {
       console.log(error);
     }
@@ -104,7 +117,7 @@ class PresetItemScreen extends React.Component {
       return (
         <Avatar
           rounded
-          size='medium'
+          size='small'
           source={{ uri: icon }}
         />
       );
@@ -112,7 +125,7 @@ class PresetItemScreen extends React.Component {
       return (
         <Avatar
           rounded
-          size='medium'
+          size='small'
           title={`${name.substring(0, 3).toUpperCase()}`}
           titleStyle={{ fontSize: 14 }}
         />
@@ -123,11 +136,10 @@ class PresetItemScreen extends React.Component {
   renderOverlayItem = ({ item }) => {
     const [id, exerciseDescription] = item;
     return (
-
       <ListItem
         Component={TouchableOpacity}
         onPress={async () => {
-          await this.formExerciseObject(id);
+          const exercises =  await this.formExerciseObject(id);
           this.setState({ isOverlayVisible: false, exercises });
         }}
         key={id}
@@ -175,24 +187,99 @@ class PresetItemScreen extends React.Component {
     );
   };
 
-  renderPicker = () => {
+  renderItemView = ({ item }) => {
+    const dictionaryItem = this.state.dictRef[item.exerciseDictionaryId];
+    const {
+      name,
+      description,
+      maximumWeight,
+      weightStep,
+    } = dictionaryItem;
 
-    const picker = [{ label: 1, value: 1 }, { label: 2, value: 2 }, { label: 3, value: 3 }];
+    const exercises = this.state.exercises;
+    const itemId = exercises.findIndex((arrItem) => item._id === arrItem._id);
+    return (
+      <View style={{ marginVertical: 10, flexDirection: 'row', justifyContent: 'space-around' }}>
+        <View style={[styles.subView]}>
+          {this.renderAvatar(dictionaryItem)}
+        </View>
+        <View style={styles.subView}>
+          <View>
+            <Text>{name}</Text>
+          </View>
+        </View>
+        <View style={styles.subView}>
+          {this.renderWeightPicker(maximumWeight, weightStep, itemId)}
+        </View>
+        <View style={styles.subView}>
+          {this.renderRepetitionPicker(itemId)}
+        </View>
+        <View style={[styles.subView]}>
+          <Icon
+            containerStyle={styles.icon}
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
+            onPress={() => {
+              const nonF = this.state.exercises;
+              const exercises = nonF.filter(({ _id }) => _id !== item._id);
+              this.setState({ exercises });
+            }}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  fillArray = (max, step, min = 0) => {
+    const arr = [];
+    for (let i = min; i <= max; i += step) {
+      arr.push({ label: i, value: i });
+    }
+    return arr;
+  };
+
+  renderWeightPicker = (max, step, id) => {
+    const values = this.fillArray(max, step);
     return (
       <Picker
-        selectedValue={this.state.language}
-        style={{ height: 10, width: 10 }}
-        onValueChange={(itemValue, itemIndex) =>
-          this.setState({ language: itemValue })
+        selectedValue={this.state.exercises[id].weight}
+        style={{ height: 50, width: 90 }}
+        onValueChange={(itemValue, itemIndex) => {
+          const exercises = this.state.exercises;
+          exercises[id].weight = itemValue;
+          this.setState({ exercises });
+        }
         }>
         {
-          picker.map(item => {
+          values.map(item => {
             return (<Picker.Item label={`${item.label}`} value={item.value} key={item.value}/>);
           })
         }
       </Picker>
     );
   };
+
+  renderRepetitionPicker = (id) => {
+    const values = this.fillArray(10, 1, 1);
+    return (
+      <Picker
+        selectedValue={this.state.exercises[id].repetitionCount}
+        style={{ height: 50, width: 75 }}
+        onValueChange={(itemValue, itemIndex) => {
+          const exercises = this.state.exercises;
+          exercises[id].repetitionCount = itemValue;
+          this.setState({ exercises });
+        }
+        }>
+        {
+          values.map(item => {
+            return (<Picker.Item label={`${item.label}`} value={item.value} key={item.value}/>);
+          })
+        }
+      </Picker>
+    );
+  };
+
   renderItem = ({ item }) => {
     const dictionaryItem = this.state.dictRef[item.exerciseDictionaryId];
     const {
@@ -205,6 +292,7 @@ class PresetItemScreen extends React.Component {
     return (
       <View>
         <ListItem
+          Component={View}
           key={item._id}
           title={name}
           subtitle={description}
@@ -217,7 +305,6 @@ class PresetItemScreen extends React.Component {
   };
 
   render() {
-    const picker = [{ label: 1, value: 1 }, { label: 2, value: 2 }, { label: 3, value: 3 }];
     if (this.state.isLoading)
       return (<View/>);
     return (
@@ -227,25 +314,11 @@ class PresetItemScreen extends React.Component {
           backgroundColor="#FFFFFF"
         />
 
-        <Picker
-          selectedValue={this.state.language}
-          style={{ height: 50, width: 100 }}
-          onValueChange={(itemValue, itemIndex) =>
-            this.setState({ language: itemValue })
-          }>
-          {
-            picker.map(item => {
-              return (<Picker.Item label={`${item.label}`} value={item.value} key={item.value}/>);
-            })
-          }
-        </Picker>
-
-
         {this.renderOverlay()}
         <FlatList style={styles.list}
                   data={this.state.exercises}
                   extraData={this.state}
-                  renderItem={this.renderItem}
+                  renderItem={this.renderItemView}
                   keyExtractor={this.keyExtractor}
                   ListFooterComponent={this.renderFooter}
         />
@@ -260,6 +333,9 @@ const styles = StyleSheet.create({
   },
   icon: {
     paddingLeft: 10,
+  },
+  subView: {
+    alignSelf: 'center',
   },
 });
 
