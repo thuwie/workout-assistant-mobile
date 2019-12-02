@@ -33,50 +33,45 @@ class PresetScreen extends React.Component {
     }
   }
 
+  refresh = async (navigationData) => {
+    try {
+      const userData = this.state.userData;
+      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+      await this.loadData();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  /*async componentDidUpdate() {
+    /*const updated = this.props.navigation.getParam('updated');
+    const navigationPresets = this.props.navigation.getParam('itemData');
+    console.log(updated);
+    if (updated) {
+      this.props.navigation.setParams({ updated: false });
+      try {
+        const userData = this.state.userData;
+        console.log(this.state.userData);
+        const { presets } = userData;
+        const itemId = presets.findIndex(({ _id }) => _id === navigationPresets._id);
+        presets[itemId] = navigationPresets;
+        userData.presets = presets;
+        console.log(userData);
+        //this.setState({userData});
+        await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+        /*        console.log("userData")
+                console.log(userData);
+        await this.loadData();
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }*/
+
   loadData = async () => {
     try {
-      // const userData = await AsyncStorage.getItem('@user_data');
-      const userData = {
-        'presets': [{
-          'exercises': ['5ddfff926ebc1e2018cf2982'],
-          'trainings': [],
-          '_id': '5ddae6a290992131dc04dbc7',
-          'userId': '5ddad8ab90992131dc04dbc5',
-          'name': 'Bullshit',
-          '__v': 0,
-        }, {
-          'exercises': ['5ddac2b690992131dc04dbc2'],
-          'trainings': [],
-          '_id': '5ddae68c90992131dc04dbc6',
-          'userId': '5ddab3af90992131dc04dbc1',
-          'name': 'Bullshit',
-          '__v': 0,
-        }, {
-          'exercises': [],
-          'trainings': [],
-          '_id': '5ddaea4e90992131dc04dbc8',
-          'userId': '5ddad8ab90992131dc04dbc5',
-          'name': 'Bullshit Two',
-          '__v': 0,
-        }, {
-          'exercises': [],
-          'trainings': [],
-          '_id': '5ddaea5790992131dc04dbc9',
-          'userId': '5ddad8ab90992131dc04dbc5',
-          'name': 'Bullshit Awesome',
-          '__v': 0,
-        }],
-        'trainings': [],
-        '_id': '5ddad8ab90992131dc04dbc5',
-        'username': 'Ronin',
-        'email': 'Ui@gmail.com',
-        'birthDate': '2005-01-01T00:00:00.000Z',
-        'firstName': 'R',
-        'secondName': 'Rхахахахах',
-      };
-      global.accessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlJvbmluIiwiZW1haWwiOiJVaUBnbWFpbC5jb20iLCJpYXQiOjE1NzUwNTIyNDF9._B1Fsu0WiEL5IKAUKcQAsbDUSf_xhCYVi40vOHrhgSQ';
-      global.userId = '5ddad8ab90992131dc04dbc5';
-      this.setState({ userData });
+      const userData = await AsyncStorage.getItem('@user_data');
+
+      this.setState({ userData: JSON.parse(userData) });
     } catch (err) {
       console.log(err);
     }
@@ -102,7 +97,7 @@ class PresetScreen extends React.Component {
   renderItem = ({ item }) => (
     <ListItem style={styles.item}
               Component={TouchableOpacity}
-              onPress={() => this.props.navigation.navigate('PresetItem', { itemData: item })}
+              onPress={() => this.props.navigation.navigate('PresetItem', { itemData: item, goBack: (param)=>this.refresh(param) })}
               friction={90}
               tension={100}
               activeScale={0.95}
@@ -113,7 +108,7 @@ class PresetScreen extends React.Component {
                 size: 30,
                 backgroundColor: colors.BLACK,
               }}
-              chevron={{color: colors.BLACK, size: 30}}
+              chevron={{ color: colors.BLACK, size: 30 }}
               title={item.name}/>
   );
 
@@ -123,12 +118,13 @@ class PresetScreen extends React.Component {
       return (<View/>);
     } else {
       return (
-        <FlatList style={styles.list}
-                  data={this.state.userData.presets}
-                  renderItem={this.renderItem}
-                  keyExtractor={this.keyExtractor}
-                  ListFooterComponent={this.renderFooter}
-        />);
+          <FlatList style={styles.list}
+                    data={this.state.userData.presets}
+                    renderItem={this.renderItem}
+                    keyExtractor={this.keyExtractor}
+                    ListFooterComponent={this.renderFooter}
+          />
+      );
     }
   }
 }

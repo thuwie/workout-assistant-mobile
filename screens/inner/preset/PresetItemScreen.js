@@ -1,16 +1,16 @@
 import React from 'react';
 import {
   AsyncStorage,
-  StyleSheet,
-  View,
-  Platform,
-  TouchableOpacity,
   FlatList,
-  StatusBar,
-  Text,
   Picker,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { Icon, Avatar, Overlay, ListItem } from 'react-native-elements';
+import { Avatar, Icon, ListItem, Overlay } from 'react-native-elements';
 
 import { withNavigation } from 'react-navigation';
 import colors from '../../../constants/Colors';
@@ -36,19 +36,24 @@ class PresetItemScreen extends React.Component {
           name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
           onPress={async () => {
             const { params = {} } = navigation.state;
-            const { userData = {} } = params;
-            console.log(userData);
-            try {
-              await this.saveToStorage(userData);
-              const response = await this.updateUser(userData);
-              if (response.error) {
-                throw new Error('Unauthorized');
-              }
-              navigation.navigate('Profile', { updated: true });
-              console.log(response);
-            } catch (error) {
-              console.log(error);
+            const { itemData = {}, exercises } = params;
+            if (exercises) {
+              console.log(exercises);
+              const exercisesUrl = `${global.apiUrl}/exercise/`;
+              const promises = exercises.map((exercise) => {
+                return request(exercisesUrl + exercise._id, methods.PUT, { ...exercise });
+              });
+              await Promise.all(promises);
             }
+            const url = `${global.apiUrl}/preset/${itemData._id}`;
+            try {
+              await request(url, methods.PUT, itemData);
+            } catch (err) {
+              console.log(err);
+            }
+            await navigation.state.params.goBack(itemData);
+            navigation.goBack();
+            navigation.navigate('Preset', { updated: true, itemData });
           }}/>
       </View>
     ),
@@ -82,6 +87,7 @@ class PresetItemScreen extends React.Component {
   async componentDidMount() {
     try {
       const itemData = this.props.navigation.getParam('itemData');
+      console.log(itemData);
       await this.getExerciseData(itemData);
       const dictRef = await AsyncStorage.getItem('@exercises_dictionary');
       this.setState({
@@ -100,6 +106,11 @@ class PresetItemScreen extends React.Component {
       const exercises = this.state.exercises;
       const body = { exerciseDictionaryId, userId: global.userId, weight: 0, repetitionCount: 0 };
       const exerciseObject = await request(url, methods.POST, body);
+
+      const itemData = this.state.itemData;
+      itemData.exercises.push(exerciseObject._id);
+
+      this.props.navigation.setParams({ itemData });
 
       exercises.push(exerciseObject);
       return exercises;
@@ -139,8 +150,9 @@ class PresetItemScreen extends React.Component {
       <ListItem
         Component={TouchableOpacity}
         onPress={async () => {
-          const exercises =  await this.formExerciseObject(id);
+          const exercises = await this.formExerciseObject(id);
           this.setState({ isOverlayVisible: false, exercises });
+          this.props.navigation.setParams({ exercises });
         }}
         key={id}
         leftAvatar={this.renderAvatar(exerciseDescription)}
@@ -221,7 +233,13 @@ class PresetItemScreen extends React.Component {
             name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
             onPress={() => {
               const nonF = this.state.exercises;
+
               const exercises = nonF.filter(({ _id }) => _id !== item._id);
+
+              const itemData = this.state.itemData;
+              itemData.exercises = exercises.map(({ _id }) => _id);
+
+              this.props.navigation.setParams({ itemData, exercises });
               this.setState({ exercises });
             }}
           />
@@ -243,11 +261,12 @@ class PresetItemScreen extends React.Component {
     return (
       <Picker
         selectedValue={this.state.exercises[id].weight}
-        style={{ height: 50, width: 90 }}
+        style={{ height: 50, width: 95 }}
         onValueChange={(itemValue, itemIndex) => {
           const exercises = this.state.exercises;
           exercises[id].weight = itemValue;
           this.setState({ exercises });
+          this.props.navigation.setParams({ exercises });
         }
         }>
         {
@@ -268,6 +287,8 @@ class PresetItemScreen extends React.Component {
         onValueChange={(itemValue, itemIndex) => {
           const exercises = this.state.exercises;
           exercises[id].repetitionCount = itemValue;
+
+          this.props.navigation.setParams({ exercises });
           this.setState({ exercises });
         }
         }>
