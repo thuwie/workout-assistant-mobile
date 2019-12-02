@@ -6,11 +6,18 @@ import {
   View,
   FlatList,
   TouchableOpacity,
+  Text,
 } from 'react-native';
 import TouchableScale from 'react-native-touchable-scale';
 import colors from '../../../constants/Colors';
-import { ListItem } from 'react-native-elements';
+import { ListItem, Overlay } from 'react-native-elements';
 import { withNavigation } from 'react-navigation';
+import FormTextInput from '../../../components/FormTextInput';
+import strings from '../../../constants/strings/en_Strings';
+import methods from '../../../constants/Methods';
+import system from '../../../constants/System';
+import Button from '../../../components/Button';
+import request from '../../../utils/customRequest';
 
 class PresetScreen extends React.Component {
   static navigationOptions = {
@@ -21,6 +28,8 @@ class PresetScreen extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
+      isOverlayVisible: false,
+      newPreset: '',
     };
   }
 
@@ -42,30 +51,64 @@ class PresetScreen extends React.Component {
       console.log(err);
     }
   };
-  /*async componentDidUpdate() {
-    /*const updated = this.props.navigation.getParam('updated');
-    const navigationPresets = this.props.navigation.getParam('itemData');
-    console.log(updated);
-    if (updated) {
-      this.props.navigation.setParams({ updated: false });
-      try {
-        const userData = this.state.userData;
-        console.log(this.state.userData);
-        const { presets } = userData;
-        const itemId = presets.findIndex(({ _id }) => _id === navigationPresets._id);
-        presets[itemId] = navigationPresets;
-        userData.presets = presets;
-        console.log(userData);
-        //this.setState({userData});
-        await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
-        /*        console.log("userData")
-                console.log(userData);
-        await this.loadData();
-      } catch (err) {
-        console.log(err);
-      }
+
+  handlePresetNameChange = newPreset => {
+    this.setState({ newPreset });
+  };
+
+  handleCreatePress = async () => {
+    const presetUrl = `${global.apiUrl}/preset`;
+    const userUrl = `${global.apiUrl}/user/${global.userId}`;
+    try {
+      const userPresets = this.state.userData.presets;
+      const response = await request(presetUrl, methods.POST, {
+        exercises: [],
+        trainings: [],
+        name: this.state.newPreset,
+        userId: global.userId,
+      });
+      userPresets.push(response);
+
+      await request(userUrl, methods.PUT, {presets: userPresets});
+      const userData = this.state.userData;
+      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+      this.setState({isOverlayVisible: false, newPreset: ''});
+      this.props.navigation.navigate('PresetItem', {
+        itemData: response,
+        goBack: (param) => this.refresh(param),
+      })
+    } catch (error) {
+      console.log(error);
     }
-  }*/
+  };
+
+  renderOverlay = () => {
+    // TODO Overlay recolors the StatusBar
+    return (
+      <Overlay
+        isVisible={this.state.isOverlayVisible}
+        windowBackgroundColor="rgba(0, 0, 0, .5)"
+        width="60%"
+        height="auto"
+        onBackdropPress={() => {
+          this.setState({ newPreset: '', isOverlayVisible: false });
+        }}
+      >
+        <View>
+          <Text>Preset name:</Text>
+          <FormTextInput
+            style={{marginTop: 10}}
+            value={this.state.newPreset}
+            onChangeText={this.handlePresetNameChange}
+            placeholder={strings.PRESETNAME_PLACEHOLDER}
+            autoCorrect={false}
+          />
+          <Button style={{ marginTop: 10 }} label={strings.CREATE} onPress={this.handleCreatePress}/>
+        </View>
+      </Overlay>
+    );
+  };
+
 
   loadData = async () => {
     try {
@@ -84,6 +127,7 @@ class PresetScreen extends React.Component {
       <ListItem style={styles.item}
                 Component={TouchableOpacity}
                 title="Add new preset"
+                onPress={() => this.setState({ isOverlayVisible: true })}
                 leftIcon={{
                   name: 'add',
                   color: colors.BLACK,
@@ -97,7 +141,10 @@ class PresetScreen extends React.Component {
   renderItem = ({ item }) => (
     <ListItem style={styles.item}
               Component={TouchableOpacity}
-              onPress={() => this.props.navigation.navigate('PresetItem', { itemData: item, goBack: (param)=>this.refresh(param) })}
+              onPress={() => this.props.navigation.navigate('PresetItem', {
+                itemData: item,
+                goBack: (param) => this.refresh(param),
+              })}
               friction={90}
               tension={100}
               activeScale={0.95}
@@ -118,12 +165,15 @@ class PresetScreen extends React.Component {
       return (<View/>);
     } else {
       return (
+        <View>
+          {this.renderOverlay()}
           <FlatList style={styles.list}
                     data={this.state.userData.presets}
                     renderItem={this.renderItem}
                     keyExtractor={this.keyExtractor}
                     ListFooterComponent={this.renderFooter}
           />
+        </View>
       );
     }
   }
