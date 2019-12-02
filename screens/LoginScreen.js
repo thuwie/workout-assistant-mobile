@@ -67,6 +67,7 @@ class LoginScreen extends React.Component {
     const usrUrl = global.apiUrl + '/user/' + global.userId;
     const trainingsUrl = global.apiUrl + '/training/search?userId=' + global.userId;
     try {
+
       const usrBody = await request(usrUrl, 'GET');
       const trainingsBody = await request(trainingsUrl, 'GET');
 
@@ -77,6 +78,7 @@ class LoginScreen extends React.Component {
       await AsyncStorage.setItem('@user_data', JSON.stringify(usrBody));
       await AsyncStorage.setItem('@user_trainings', JSON.stringify(trainingsBody));
       await this.buildDateIndex(trainingsBody);
+
 
       this.props.navigation.navigate('Start');
     } catch (error) {

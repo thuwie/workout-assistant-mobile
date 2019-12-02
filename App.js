@@ -12,7 +12,7 @@ import StartScreen from './screens/inner/StartScreen';
 import SignupScreen from './screens/signup/SignupScreen';
 import PersonDataSignupScreen from './screens/signup/PersonDataSignup';
 import PersonPhysicSignupScreen from './screens/signup/PersonPhysicSignup';
-import MainTabNavigator from './navigation/MainTabNavigator'
+import MainTabNavigator from './navigation/MainTabNavigator';
 
 import customRequest from './utils/customRequest';
 import methods from './constants/Methods';
@@ -34,7 +34,7 @@ const AppNavigator = createStackNavigator(
 const AppContainer = createAppContainer(AppNavigator);
 
 export default function App(props) {
-  global.apiUrl = 'http://192.168.1.162:8089/api';
+  global.apiUrl = 'http://192.168.1.10:8089/api';
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {
@@ -76,8 +76,8 @@ async function prepareDictionary() {
   const url = `${global.apiUrl}/exercise/dictionary/all`;
   const resp = await customRequest(url, methods.GET);
   const builded = {};
-  resp.map(({ _id, defaultWeight, description, name }) => {
-    builded[_id] = { defaultWeight, description, name };
+  resp.map(({ _id, defaultWeight, description, name, maximumWeight, weightStep }) => {
+    builded[_id] = { defaultWeight, description, name, maximumWeight, weightStep };
   });
   await AsyncStorage.setItem('@exercises_dictionary', JSON.stringify(builded));
 }
