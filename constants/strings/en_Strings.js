@@ -2,6 +2,7 @@ export default {
   LOGIN: 'Log in',
   SIGN_UP: 'Sign up',
   NEXT: 'Next',
+  CREATE: 'Create',
   FINISH: 'Finish',
   USERNAME_PLACEHOLDER: 'Username',
   PASSWORD_PLACEHOLDER: 'Password',
@@ -12,6 +13,7 @@ export default {
   WEIGHT_PLACEHOLDER: 'Your weight',
   HEIGHT_PLACEHOLDER: 'Your height',
   GOAL_PLACEHOLDER: 'Weight goal',
+  PRESETNAME_PLACEHOLDER: 'Preset name',
 
 
   USERNAME_REQUIRED: 'Username required',
