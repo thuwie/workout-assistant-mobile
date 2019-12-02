@@ -7,10 +7,8 @@ import HomeScreen from '../screens/inner/HomeScreen';
 import ProfileScreen from '../screens/inner/profile/ProfileScreen';
 import ProfileSettingsScreen from '../screens/inner/profile/ProfileSettingsScreen';
 import PresetScreen from '../screens/inner/preset/PresetScreen';
-import PresetItemScreen from "../screens/inner/preset/PresetItemScreen";
+import PresetItemScreen from '../screens/inner/preset/PresetItemScreen';
 import CalendarScreen from '../screens/inner/CalendarScreen';
-
-
 
 
 const config = Platform.select({
@@ -90,11 +88,14 @@ CalendarStack.navigationOptions = {
 PresetStack.path = '';
 
 const tabNavigator = createBottomTabNavigator({
-  ProfileStack,
-  HomeStack,
-  PresetStack,
-  CalendarStack,
-});
+    ProfileStack,
+    HomeStack,
+    PresetStack,
+    CalendarStack,
+  },
+  {
+    initialRouteName: 'HomeStack',
+  });
 
 tabNavigator.path = '';
 
