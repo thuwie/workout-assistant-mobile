@@ -79,6 +79,7 @@ class LoginScreen extends React.Component {
 
       await this.buildDateIndex(usrBody.trainings);
 
+
       this.props.navigation.navigate('Start');
     } catch (error) {
       console.log(error);

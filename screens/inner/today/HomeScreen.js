@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
-import {Avatar, ListItem} from "react-native-elements";
+import {Avatar, ListItem, Button} from "react-native-elements";
 import colors from "../../../constants/Colors";
 
 
@@ -25,7 +25,8 @@ class HomeScreen extends React.Component {
       userData: {},
       exerciseStorage: [],
       trainingsIndex: [],
-      exerciseDictionary: {}
+      exerciseDictionary: {},
+      cancelled: false
     };
   }
 
@@ -64,7 +65,6 @@ class HomeScreen extends React.Component {
       return preset._id === train.presetId;
     });
     let newIndex = [];
-    console.log(preset.exercises);
     preset.exercises.forEach((index) => {
       const actualData = this.state.exerciseStorage.find((element) => element._id === index);
       actualData.excerciseDictionaryData = this.state.exerciseDictionary[actualData.exerciseDictionaryId];
@@ -74,7 +74,6 @@ class HomeScreen extends React.Component {
     let prettyDateFormat = new Date(nextTrainIndexEntry.timestamp);
     train.agendaDate = prettyDateFormat.toLocaleString('en-US', options);
     preset.exercises = newIndex;
-    console.log(newIndex);
     return {train, preset};
   }
 
@@ -122,7 +121,7 @@ class HomeScreen extends React.Component {
 
   renderScreen = (trainData) => {
     return (
-      <View>
+      <View style={styles.container}>
         <Text h1>Next training</Text>
         <Text h2>{trainData.train.agendaDate}</Text>
         <Text h3>{trainData.preset.name}</Text>
@@ -132,8 +131,12 @@ class HomeScreen extends React.Component {
           renderItem={this.renderListItem}
           keyExtractor={this.keyExtractor}
         />
+        <Button
+          title="Start"
+          onPress={() => this.props.navigation.navigate('CurrentTrain', { trainData })}
+        />
       </View>);
-  }
+  };
 
 
   render() {
@@ -146,5 +149,14 @@ class HomeScreen extends React.Component {
   }
 
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+  },
+});
 
 export default withNavigation(HomeScreen);
