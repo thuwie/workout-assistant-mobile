@@ -94,6 +94,8 @@ class LoginScreen extends React.Component {
       const body = await request(url, 'POST', {username, password});
       global.accessToken = body.accessToken;
       global.userId = body.userId;
+      await AsyncStorage.setItem('@user_id', body.userId);
+      await AsyncStorage.setItem('@accessToken', body.accessToken);
       console.log(body);
       if (body.error) {
         return;

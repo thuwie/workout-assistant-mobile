@@ -34,7 +34,7 @@ const AppNavigator = createStackNavigator(
 const AppContainer = createAppContainer(AppNavigator);
 
 export default function App(props) {
-  global.apiUrl = 'http://192.168.1.162:8089/api';
+  global.apiUrl = 'http://85.143.217.110:8089/api';
   const [isLoadingComplete, setLoadingComplete] = useState(false);
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {
