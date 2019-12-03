@@ -4,6 +4,7 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/inner/today/HomeScreen';
+import CurrentTrain from "../screens/inner/today/CurrentTrain";
 import ProfileScreen from '../screens/inner/profile/ProfileScreen';
 import ProfileSettingsScreen from '../screens/inner/profile/ProfileSettingsScreen';
 import PresetScreen from '../screens/inner/preset/PresetScreen';
@@ -40,6 +41,7 @@ ProfileStack.path = '';
 const HomeStack = createStackNavigator(
   {
     Home: HomeScreen,
+    CurrentTrain: CurrentTrain
   },
   config,
 );
