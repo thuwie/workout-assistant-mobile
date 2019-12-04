@@ -25,7 +25,7 @@ const getUpdatedSelectedItemsArray = (selectedItems, id) => {
   return selectedItems;
 };
 
-class CurrentTrain extends React.Component {
+class CurrentTrainScreen extends React.Component {
 
   constructor(props) {
     super(props);
@@ -173,4 +173,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default withNavigation(CurrentTrain);
+export default withNavigation(CurrentTrainScreen);

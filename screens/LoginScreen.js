@@ -10,6 +10,8 @@ import Button from '../components/Button';
 
 import request from '../utils/customRequest';
 
+import AsyncInterface from '../components/AsyncStorageInterface'
+
 class LoginScreen extends React.Component {
   passwordInputRef = React.createRef();
 
@@ -46,23 +48,6 @@ class LoginScreen extends React.Component {
     this.setState({password});
   };
 
-  // TODO: global storage interface
-  buildDateIndex = async (userTrainings) => {
-    const dateIndex = [];
-    userTrainings.forEach((trainingItem, _id) => {
-      const currDates = trainingItem.placed;
-      currDates.forEach((currDate) => {
-        const timestamp_tmp = Date.parse(currDate);
-        const data = {timestamp: timestamp_tmp, train_id: _id};
-        dateIndex.push(data);
-      })
-    });
-    dateIndex.sort((a, b) => {
-      return a.timestamp - b.timestamp;
-    });
-    await AsyncStorage.setItem('@train_date_index', JSON.stringify(dateIndex));
-  };
-
   loadUserData = async () => {
     const usrUrl = global.apiUrl + '/user/' + global.userId;
     const exerciseUrl = global.apiUrl + '/exercise/search?userId=' + global.userId;
@@ -74,11 +59,10 @@ class LoginScreen extends React.Component {
       delete usrBody['password'];
       delete usrBody['__v'];
 
-      await AsyncStorage.setItem('@user_data', JSON.stringify(usrBody));
-      await AsyncStorage.setItem('@exercise_storage', JSON.stringify(exerciseBody));
-
-      await this.buildDateIndex(usrBody.trainings);
-
+      await AsyncInterface.write(AsyncInterface.storageDictionary.user_data, usrBody);
+      await AsyncInterface.write(AsyncInterface.storageDictionary.exercise_storage, exerciseBody);
+      await AsyncInterface.setStorageState(1);
+      await AsyncInterface.rebuildTrainIndex(usrBody.trainings);
 
       this.props.navigation.navigate('Start');
     } catch (error) {

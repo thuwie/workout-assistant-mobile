@@ -17,6 +17,8 @@ import colors from '../../../constants/Colors';
 import methods from '../../../constants/Methods';
 import request from '../../../utils/customRequest';
 
+import AsyncInterface from "../../../components/AsyncStorageInterface";
+
 class PresetItemScreen extends React.Component {
 
   static navigationOptions = ({ navigation, screenProps }) => ({
@@ -51,6 +53,7 @@ class PresetItemScreen extends React.Component {
             } catch (err) {
               console.log(err);
             }
+            await AsyncInterface.setStorageState(0);
             await navigation.state.params.goBack(itemData);
             navigation.goBack();
             navigation.navigate('Preset', { updated: true, itemData });

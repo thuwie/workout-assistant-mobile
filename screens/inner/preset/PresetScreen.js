@@ -18,6 +18,7 @@ import methods from '../../../constants/Methods';
 import system from '../../../constants/System';
 import Button from '../../../components/Button';
 import request from '../../../utils/customRequest';
+import AsyncInterface from "../../../components/AsyncStorageInterface";
 
 class PresetScreen extends React.Component {
   static navigationOptions = {
@@ -73,6 +74,7 @@ class PresetScreen extends React.Component {
       const userData = this.state.userData;
       await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
       this.setState({isOverlayVisible: false, newPreset: ''});
+      await AsyncInterface.setStorageState(0);
       this.props.navigation.navigate('PresetItem', {
         itemData: response,
         goBack: (param) => this.refresh(param),

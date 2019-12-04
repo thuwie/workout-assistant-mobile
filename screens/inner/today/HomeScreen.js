@@ -14,6 +14,8 @@ import {
 import {withNavigation} from 'react-navigation';
 import {Avatar, ListItem, Button} from "react-native-elements";
 import colors from "../../../constants/Colors";
+import AsyncInterface from "../../../components/AsyncStorageInterface";
+import request from "../../../utils/customRequest";
 
 
 class HomeScreen extends React.Component {
@@ -26,23 +28,41 @@ class HomeScreen extends React.Component {
       exerciseStorage: [],
       trainingsIndex: [],
       exerciseDictionary: {},
-      cancelled: false
     };
   }
 
   loadTrainingsData = async () => {
     try {
-      const userData = await AsyncStorage.getItem('@user_data');
-      const trainingsDateIndex = await AsyncStorage.getItem('@train_date_index');
-      const exerciseStorageData = await AsyncStorage.getItem('@exercise_storage');
-      const dictRef = await AsyncStorage.getItem('@exercises_dictionary');
+
+      let exerciseStorageData = {};
+      let exerciseBody = {};
+      let trainingsDateIndex = {};
+
+      const storageState = await AsyncInterface.getStorageState();
+      if (0 === storageState) {
+        try {
+          const exerciseUrl = global.apiUrl + '/exercise/search?userId=' + global.userId;
+          const exerciseBody = await request(exerciseUrl, 'GET');
+          await AsyncInterface.write(AsyncInterface.storageDictionary.exercise_storage, exerciseBody);
+        } catch (error) {
+          console.log(error.message);
+        }
+        exerciseStorageData = exerciseBody;
+        trainingsDateIndex = await AsyncInterface.rebuildTrainIndex();
+        await AsyncInterface.setStorageState(1);
+      } else {
+        exerciseStorageData = await AsyncInterface.read(AsyncInterface.storageDictionary.exercise_storage);
+        trainingsDateIndex = await AsyncInterface.read(AsyncInterface.storageDictionary.train_date_index);
+      }
+
+      const userData = await AsyncInterface.read(AsyncInterface.storageDictionary.user_data);
+      const dictRef = await AsyncInterface.read(AsyncInterface.storageDictionary.exercise_dictionary);
 
       this.setState({
-        userData: JSON.parse(userData),
-        trainingsDateIndex: JSON.parse(trainingsDateIndex),
-        trainingsIndex: JSON.parse(trainingsDateIndex),
-        exerciseStorage: JSON.parse(exerciseStorageData),
-        exerciseDictionary: JSON.parse(dictRef)
+        userData: userData,
+        trainingsIndex: trainingsDateIndex,
+        exerciseStorage: exerciseStorageData,
+        exerciseDictionary: dictRef,
       });
 
     } catch (err) {
@@ -77,10 +97,28 @@ class HomeScreen extends React.Component {
     return {train, preset};
   }
 
+  updateInvalidatedStorage = () => {
+    // this.setState({isLoading: true});
+  };
+
   async componentDidMount() {
     try {
       await this.loadTrainingsData();
       this.setState({isLoading: false});
+      this.props.navigation.addListener('willFocus', this.updateInvalidatedStorage);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async componentDidUpdate(P, A) {
+    console.log('did update');
+    try {
+      const state = await AsyncInterface.getStorageState();
+      if (0 === state) {
+        await this.loadTrainingsData();
+        this.setState({isLoading: false});
+      }
     } catch (err) {
       console.log(err);
     }
@@ -133,7 +171,7 @@ class HomeScreen extends React.Component {
         />
         <Button
           title="Start"
-          onPress={() => this.props.navigation.navigate('CurrentTrain', { trainData })}
+          onPress={() => this.props.navigation.navigate('CurrentTrain', {trainData})}
         />
       </View>);
   };
