@@ -17,6 +17,9 @@ import colors from "../../../constants/Colors";
 
 
 class HomeScreen extends React.Component {
+  static navigationOptions = {
+    header: null,
+  };
 
   constructor(props) {
     super(props);
@@ -153,6 +156,7 @@ class HomeScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 50,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',

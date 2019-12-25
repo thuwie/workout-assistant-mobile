@@ -41,6 +41,14 @@ class ProfileScreen extends React.Component {
     console.log('click');
     this.props.navigation.navigate('ProfileSettings', { userData: this.state.userData });
   };
+  handleExitButton = async () => {
+    console.log('click');
+    global.userId = '';
+    global.accessToken='';
+    await AsyncStorage.removeItem('@user_id');
+    await AsyncStorage.removeItem('@access_token');
+    this.props.navigation.navigate('Login');
+  };
 
   loadData = async () => {
     try {
@@ -143,6 +151,8 @@ class ProfileScreen extends React.Component {
               <View style={[styles.headSubContainer, { alignItems: 'flex-end' }]}>
                 <Icon onPress={this.handleSettingsButton} size={35} color={colors.GREY} containerStyle={styles.icon}
                       name={'settings'}/>
+                <Icon onPress={this.handleExitButton} size={35} color={colors.GREY} containerStyle={styles.icon}
+                      name={'exit'}/>
               </View>
               <View style={styles.headSubContainer}>
                 {this.renderAvatar()}

@@ -1,6 +1,6 @@
 import React from 'react';
-import {StyleSheet, StatusBar, View, KeyboardAvoidingView, Text, AsyncStorage} from 'react-native';
-import {withNavigation} from 'react-navigation';
+import { StyleSheet, StatusBar, View, KeyboardAvoidingView, Text, AsyncStorage } from 'react-native';
+import { withNavigation } from 'react-navigation';
 
 import strings from '../constants/strings/en_Strings';
 import colors from '../constants/Colors';
@@ -12,6 +12,14 @@ import request from '../utils/customRequest';
 
 class LoginScreen extends React.Component {
   passwordInputRef = React.createRef();
+
+//'@user_id'access_token
+  async componentDidMount() {
+    if (global.userId && global.accessToken) {
+      this.setState({ isLoading: true });
+      await this.loadUserData();
+    }
+  }
 
   constructor(props) {
     super(props);
@@ -26,7 +34,7 @@ class LoginScreen extends React.Component {
   }
 
   handleUsernameChange = username => {
-    this.setState({username});
+    this.setState({ username });
   };
 
   handleUsernameSubmitPress = () => {
@@ -36,14 +44,14 @@ class LoginScreen extends React.Component {
   };
 
   handleUsernameBlur = () => {
-    this.setState({usernameTouched: true});
+    this.setState({ usernameTouched: true });
   };
   handlePasswordBlur = () => {
-    this.setState({passwordTouched: true});
+    this.setState({ passwordTouched: true });
   };
 
   handlePasswordChange = password => {
-    this.setState({password});
+    this.setState({ password });
   };
 
   // TODO: global storage interface
@@ -53,9 +61,9 @@ class LoginScreen extends React.Component {
       const currDates = trainingItem.placed;
       currDates.forEach((currDate) => {
         const timestamp_tmp = Date.parse(currDate);
-        const data = {timestamp: timestamp_tmp, train_id: _id};
+        const data = { timestamp: timestamp_tmp, train_id: _id };
         dateIndex.push(data);
-      })
+      });
     });
     dateIndex.sort((a, b) => {
       return a.timestamp - b.timestamp;
@@ -76,7 +84,8 @@ class LoginScreen extends React.Component {
 
       await AsyncStorage.setItem('@user_data', JSON.stringify(usrBody));
       await AsyncStorage.setItem('@exercise_storage', JSON.stringify(exerciseBody));
-
+      await AsyncStorage.setItem('@user_id', global.userId);
+      await AsyncStorage.setItem('@access_token', global.accessToken);
       await this.buildDateIndex(usrBody.trainings);
 
 
@@ -88,10 +97,10 @@ class LoginScreen extends React.Component {
   };
 
   handleLoginPress = async () => {
-    const {username, password} = this.state;
+    const { username, password } = this.state;
     const url = global.apiUrl + '/login';
     try {
-      const body = await request(url, 'POST', {username, password});
+      const body = await request(url, 'POST', { username, password });
       global.accessToken = body.accessToken;
       global.userId = body.userId;
       await AsyncStorage.setItem('@user_id', body.userId);
