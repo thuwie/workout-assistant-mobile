@@ -69,6 +69,7 @@ async function loadResourcesAsync() {
       'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
     }),
     prepareDictionary(),
+    loadUser(),
   ]);
 }
 
@@ -80,6 +81,16 @@ async function prepareDictionary() {
     builded[_id] = { defaultWeight, description, name, maximumWeight, weightStep };
   });
   await AsyncStorage.setItem('@exercises_dictionary', JSON.stringify(builded));
+}
+
+async function loadUser() {
+  const keys = await AsyncStorage.getAllKeys();
+  if (keys.indexOf('@user_id')) {
+    global.userId = await AsyncStorage.getItem('@user_id');
+  }
+  if (keys.indexOf('@access_token')) {
+    global.accessToken = await AsyncStorage.getItem('@access_token');
+  }
 }
 
 function handleLoadingError(error) {
