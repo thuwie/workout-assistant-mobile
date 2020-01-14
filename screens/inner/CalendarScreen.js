@@ -22,7 +22,7 @@ class CalendarScreen extends React.Component {
       let markedDates = {};
       JSON.parse(userData).trainings.forEach((training) => {
         training.placed.map((date) => {
-          markedDates[date] = {marked: true};
+          markedDates[date] = { marked: true };
         });
       });
       this.setState({ userData: JSON.parse(userData), markedDates });
@@ -47,6 +47,7 @@ class CalendarScreen extends React.Component {
       markedDates: null,
       isLoading: true,
       isOverlayVisible: false,
+      isLongtapOverlayVisible: false,
       userData: null,
       pickedDay: null,
     };
@@ -63,15 +64,15 @@ class CalendarScreen extends React.Component {
       const markedDates = this.state.markedDates;
       const trainingObject = await request(url, methods.POST, body);
       trainings.push(trainingObject);
-      markedDates[dateString] = {marked: true};
+      markedDates[dateString] = { marked: true };
 
       const userData = this.state.userData;
       userData.trainings = trainings;
-      this.setState({markedDates});
+      this.setState({ markedDates });
       await request(userUrl, methods.PUT, { trainings });
       await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
     } catch (error) {
-      console.log("error");
+      console.log('error');
       console.log(error);
     }
   };
@@ -116,6 +117,18 @@ class CalendarScreen extends React.Component {
     );
   };
 
+  renderLongtapOverlayItem = ({ item }) => {
+    const { _id, name } = item;
+    return (
+      <ListItem
+        Component={TouchableOpacity}
+        key={_id}
+        title={name}
+        leftAvatar={this.renderAvatar(item)}
+      />
+    );
+  };
+
   renderPresetOverlay = () => {
     return (
       <Overlay
@@ -136,8 +149,42 @@ class CalendarScreen extends React.Component {
     );
   };
 
-  operateDay = (dayObject) => {
+  renderLongtapPresetOverlay = () => {
+    let data = [];
+    const pickedDay = this.state.pickedDay ? this.state.pickedDay.dateString : null;
+    const filteredTrainings = this.state.userData.trainings.filter((training) => training.placed.includes(pickedDay));
+    if (filteredTrainings.length > 0) {
+      const presetId = filteredTrainings[0].presetId;
+      const preset = this.state.userData.presets.filter((preset) => preset._id === presetId);
+      if (preset.length > 0) {
+        data.push(preset[0]);
+      }
+    }
+    return (
+      <Overlay
+        isVisible={this.state.isLongtapOverlayVisible}
+        windowBackgroundColor="rgba(0, 0, 0, .5)"
+        width="80%"
+        height="auto"
+        onBackdropPress={() => {
+          this.setState({ isLongtapOverlayVisible: false, pickedDay: null });
+        }}
+      >
+        <FlatList
+          data={data}
+          renderItem={this.renderLongtapOverlayItem}
+          keyExtractor={this.keyExtractor}
+        />
+      </Overlay>
+    );
+  };
+
+  handleDayTap = (dayObject) => {
     this.setState({ pickedDay: dayObject, isOverlayVisible: true });
+  };
+
+  handleLongtap = (dayObject) => {
+    this.setState({ pickedDay: dayObject, isLongtapOverlayVisible: true });
   };
 
   renderCalendar = () => {
@@ -147,10 +194,14 @@ class CalendarScreen extends React.Component {
         maxDate={(new Date()).setMonth((new Date()).getMonth() + 1)}
         onDayPress={(day) => {
           console.log('selected day', day);
-          this.operateDay(day);
+          this.handleDayTap(day);
         }}
         onDayLongPress={(day) => {
-          console.log('long tap on day selected day', day);
+          if (this.state.markedDates[day.dateString]) {
+            this.handleLongtap(day);
+          } else {
+            console.log('long tap on empty day');
+          }
         }}
         monthFormat={'MMMM yyyy'}
         onMonthChange={(month) => {
@@ -179,6 +230,7 @@ class CalendarScreen extends React.Component {
       return (
         <View style={styles.container}>
           {this.renderPresetOverlay()}
+          {this.renderLongtapPresetOverlay()}
           {this.renderCalendar()}
         </View>
       );
