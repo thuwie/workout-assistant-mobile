@@ -1,75 +1,190 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
-  Image,
-  Platform,
-  ScrollView,
+  AsyncStorage,
+  FlatList,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Calendar } from 'react-native-calendars';
-
-import { MonoText } from '../../components/StyledText';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Avatar, ListItem, Overlay } from 'react-native-elements';
+import methods from '../../constants/Methods';
+import request from '../../utils/customRequest';
 
 class CalendarScreen extends React.Component {
   static navigationOptions = {
     header: null,
   };
 
+  loadData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('@user_data');
+      let markedDates = {};
+      JSON.parse(userData).trainings.forEach((training) => {
+        training.placed.map((date) => {
+          markedDates[date] = {marked: true};
+        });
+      });
+      this.setState({ userData: JSON.parse(userData), markedDates });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  async componentDidMount() {
+    try {
+      await this.loadData();
+      this.setState({ isLoading: false });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   constructor(props) {
     super(props);
     this.props = props;
+    this.state = {
+      markedDates: null,
+      isLoading: true,
+      isOverlayVisible: false,
+      userData: null,
+      pickedDay: null,
+    };
   }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Calendar
-          // Initially visible month. Default = Date()
-          current={'2019-12-03'}
-          // Minimum date that can be selected, dates before minDate will be grayed out. Default = undefined
-          minDate={'2019-05-10'}
-          // Maximum date that can be selected, dates after maxDate will be grayed out. Default = undefined
-          maxDate={'2020-05-30'}
-          // Handler which gets executed on day press. Default = undefined
-          onDayPress={(day) => {
-            console.log('selected day', day);
-          }}
-          // Handler which gets executed on day long press. Default = undefined
-          onDayLongPress={(day) => {
-            console.log('selected day', day);
-          }}
-          // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
-          monthFormat={'yyyy MM'}
-          // Handler which gets executed when visible month changes in calendar. Default = undefined
-          onMonthChange={(month) => {
-            console.log('month changed', month);
-          }}
-          // Hide month navigation arrows. Default = false
-          hideArrows={true}
-          // Replace default arrows with custom ones (direction can be 'left' or 'right')
-          renderArrow={(direction) => (<Arrow/>)}
-          // Do not show days of other months in month page. Default = false
-          hideExtraDays={true}
-          // If hideArrows=false and hideExtraDays=false do not switch month when tapping on greyed out
-          // day from another month that is visible in calendar page. Default = false
-          disableMonthChange={true}
-          // If firstDay=1 week starts from Monday. Note that dayNames and dayNamesShort should still start from Sunday.
-          firstDay={1}
-          // Hide day names. Default = false
-          hideDayNames={true}
-          // Show week numbers to the left. Default = false
-          showWeekNumbers={true}
-          // Handler which gets executed when press arrow icon left. It receive a callback can go back month
-          onPressArrowLeft={substractMonth => substractMonth()}
-          // Handler which gets executed when press arrow icon left. It receive a callback can go next month
-          onPressArrowRight={addMonth => addMonth()}
+  createTraining = async (preset) => {
+    const { dateString } = this.state.pickedDay;
+    const { _id, userId } = preset;
+    const url = `${global.apiUrl}/training`;
+    const userUrl = `${global.apiUrl}/user/${global.userId}`;
+    const body = { presetId: _id, userId, placed: [dateString] };
+    const trainings = this.state.userData.trainings;
+    try {
+      const markedDates = this.state.markedDates;
+      const trainingObject = await request(url, methods.POST, body);
+      trainings.push(trainingObject);
+      markedDates[dateString] = {marked: true};
+
+      const userData = this.state.userData;
+      userData.trainings = trainings;
+      this.setState({markedDates});
+      await request(userUrl, methods.PUT, { trainings });
+      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+    } catch (error) {
+      console.log("error");
+      console.log(error);
+    }
+  };
+
+  keyExtractor = (item) => item._id.toString();
+
+  renderAvatar = (exercise) => {
+    const { name, icon } = exercise;
+    if (icon) {
+      return (
+        <Avatar
+          rounded
+          size='small'
+          source={{ uri: icon }}
         />
-        <Text>test ?</Text>
-      </View>
+      );
+    } else {
+      return (
+        <Avatar
+          rounded
+          size='small'
+          title={`${name.substring(0, 2).toUpperCase()}`}
+          titleStyle={{ fontSize: 14 }}
+        />
+      );
+    }
+  };
+
+  renderOverlayItem = ({ item }) => {
+    const { _id, name } = item;
+    return (
+      <ListItem
+        Component={TouchableOpacity}
+        onPress={async () => {
+          await this.createTraining(item);
+          this.setState({ isOverlayVisible: false, pickedDay: null });
+        }}
+        key={_id}
+        title={name}
+        leftAvatar={this.renderAvatar(item)}
+      />
     );
+  };
+
+  renderPresetOverlay = () => {
+    return (
+      <Overlay
+        isVisible={this.state.isOverlayVisible}
+        windowBackgroundColor="rgba(0, 0, 0, .5)"
+        width="80%"
+        height="auto"
+        onBackdropPress={() => {
+          this.setState({ isOverlayVisible: false, pickedDay: null });
+        }}
+      >
+        <FlatList
+          data={this.state.userData.presets}
+          renderItem={this.renderOverlayItem}
+          keyExtractor={this.keyExtractor}
+        />
+      </Overlay>
+    );
+  };
+
+  operateDay = (dayObject) => {
+    this.setState({ pickedDay: dayObject, isOverlayVisible: true });
+  };
+
+  renderCalendar = () => {
+    return (
+      <Calendar
+        minDate={new Date()}
+        maxDate={(new Date()).setMonth((new Date()).getMonth() + 1)}
+        onDayPress={(day) => {
+          console.log('selected day', day);
+          this.operateDay(day);
+        }}
+        onDayLongPress={(day) => {
+          console.log('long tap on day selected day', day);
+        }}
+        monthFormat={'MMMM yyyy'}
+        onMonthChange={(month) => {
+          console.log('month changed', month);
+        }}
+        hideExtraDays={true}
+        disableMonthChange={true}
+        markedDates={this.state.markedDates}
+        firstDay={1}
+        onPressArrowLeft={substractMonth => substractMonth()}
+        onPressArrowRight={addMonth => addMonth()}
+      />
+    );
+  };
+
+  render() {
+    LocaleConfig.locales['ru'] = {
+      dayNames: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+      dayNamesShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+      monthNames: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+      monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
+      today: 'Сегодня',
+    };
+    // LocaleConfig.defaultLocale = 'ru';
+    if (!this.state.isLoading) {
+      return (
+        <View style={styles.container}>
+          {this.renderPresetOverlay()}
+          {this.renderCalendar()}
+        </View>
+      );
+    } else {
+      return (<View/>);
+    }
   }
 }
 
