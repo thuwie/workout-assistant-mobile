@@ -1,5 +1,5 @@
 export default async function sendRequest(url, method, body) {
-  if (method === 'GET' || method === 'HEAD') {
+  if (method === 'GET' || method === 'HEAD' || method === 'DELETE') {
     const response = await fetch(url, {
       method,
       headers: {

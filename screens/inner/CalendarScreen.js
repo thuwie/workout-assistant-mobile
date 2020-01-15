@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-  AsyncStorage,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { AsyncStorage, FlatList, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import { Avatar, ListItem, Overlay } from 'react-native-elements';
+import { Avatar, Icon, ListItem, Overlay } from 'react-native-elements';
 import methods from '../../constants/Methods';
 import request from '../../utils/customRequest';
 
@@ -46,8 +40,8 @@ class CalendarScreen extends React.Component {
     this.state = {
       markedDates: null,
       isLoading: true,
-      isOverlayVisible: false,
       isLongtapOverlayVisible: false,
+      isTapOverlayVisible: false,
       userData: null,
       pickedDay: null,
     };
@@ -68,13 +62,56 @@ class CalendarScreen extends React.Component {
 
       const userData = this.state.userData;
       userData.trainings = trainings;
-      this.setState({ markedDates });
+      this.setState({ markedDates, isTapOverlayVisible: false });
       await request(userUrl, methods.PUT, { trainings });
       await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
     } catch (error) {
       console.log('error');
       console.log(error);
     }
+  };
+
+  deleteTraining = async () => {
+    const pickedDay = this.state.pickedDay ? this.state.pickedDay.dateString : null;
+    const training = this.getTraining();
+    console.log(training);
+    if (training.length <= 0) {
+      return;
+    }
+    const { _id } = training[0];
+    const url = `${global.apiUrl}/training/${_id}`;
+    const userUrl = `${global.apiUrl}/user/${global.userId}`;
+    const userData = this.state.userData;
+    const trainings = userData.trainings.filter((training) => !training.placed.includes(pickedDay));
+    userData.trainings = trainings;
+    const markedDates = this.state.markedDates;
+    delete markedDates[pickedDay];
+    try {
+      await request(url, methods.DELETE);
+      await request(userUrl, methods.PUT, { trainings });
+      this.setState({ markedDates, isLongtapOverlayVisible: false });
+      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  getTraining = () => {
+    const pickedDay = this.state.pickedDay ? this.state.pickedDay.dateString : null;
+    return this.state.userData.trainings.filter((training) => training.placed.includes(pickedDay));
+  };
+
+  getPreset = () => {
+    let data = [];
+    const filteredTrainings = this.getTraining();
+    if (filteredTrainings.length > 0) {
+      const presetId = filteredTrainings[0].presetId;
+      const preset = this.state.userData.presets.filter((preset) => preset._id === presetId);
+      if (preset.length > 0) {
+        data.push(preset[0]);
+      }
+    }
+    return data;
   };
 
   keyExtractor = (item) => item._id.toString();
@@ -108,7 +145,7 @@ class CalendarScreen extends React.Component {
         Component={TouchableOpacity}
         onPress={async () => {
           await this.createTraining(item);
-          this.setState({ isOverlayVisible: false, pickedDay: null });
+          this.setState({ isLongtapOverlayVisible: false, pickedDay: null });
         }}
         key={_id}
         title={name}
@@ -117,7 +154,7 @@ class CalendarScreen extends React.Component {
     );
   };
 
-  renderLongtapOverlayItem = ({ item }) => {
+  renderTapOverlayItem = ({ item }) => {
     const { _id, name } = item;
     return (
       <ListItem
@@ -129,15 +166,62 @@ class CalendarScreen extends React.Component {
     );
   };
 
-  renderPresetOverlay = () => {
+  renderDeleteOverlayItem = ({ item }) => {
+    const { _id, name } = item;
+    return (
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <ListItem
+          style={[styles.subView, { width: 200 }]}
+          Component={TouchableOpacity}
+          key={_id}
+          title={name}
+          leftAvatar={this.renderAvatar(item)}
+        />
+        <View style={[styles.subView]}>
+          <Icon
+            containerStyle={[styles.icon, { marginRight: 30}]}
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
+            onPress={async () => {
+              console.log('/');
+              await this.deleteTraining(item);
+            }}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  renderViewOverlay = () => {
+    const data = this.getPreset();
     return (
       <Overlay
-        isVisible={this.state.isOverlayVisible}
+        isVisible={this.state.isTapOverlayVisible}
         windowBackgroundColor="rgba(0, 0, 0, .5)"
         width="80%"
         height="auto"
         onBackdropPress={() => {
-          this.setState({ isOverlayVisible: false, pickedDay: null });
+          this.setState({ isTapOverlayVisible: false, pickedDay: null });
+        }}
+      >
+        <FlatList
+          data={data}
+          renderItem={this.renderTapOverlayItem}
+          keyExtractor={this.keyExtractor}
+        />
+      </Overlay>
+    );
+  };
+
+  renderPickerOverlay = () => {
+    return (
+      <Overlay
+        isVisible={this.state.isTapOverlayVisible}
+        windowBackgroundColor="rgba(0, 0, 0, .5)"
+        width="80%"
+        height="auto"
+        onBackdropPress={() => {
+          this.setState({ isTapOverlayVisible: false, pickedDay: null });
         }}
       >
         <FlatList
@@ -149,17 +233,8 @@ class CalendarScreen extends React.Component {
     );
   };
 
-  renderLongtapPresetOverlay = () => {
-    let data = [];
-    const pickedDay = this.state.pickedDay ? this.state.pickedDay.dateString : null;
-    const filteredTrainings = this.state.userData.trainings.filter((training) => training.placed.includes(pickedDay));
-    if (filteredTrainings.length > 0) {
-      const presetId = filteredTrainings[0].presetId;
-      const preset = this.state.userData.presets.filter((preset) => preset._id === presetId);
-      if (preset.length > 0) {
-        data.push(preset[0]);
-      }
-    }
+  renderDeleteOverlay = () => {
+    const data = this.getPreset();
     return (
       <Overlay
         isVisible={this.state.isLongtapOverlayVisible}
@@ -172,19 +247,29 @@ class CalendarScreen extends React.Component {
       >
         <FlatList
           data={data}
-          renderItem={this.renderLongtapOverlayItem}
+          renderItem={this.renderDeleteOverlayItem}
           keyExtractor={this.keyExtractor}
         />
       </Overlay>
     );
   };
 
-  handleDayTap = (dayObject) => {
-    this.setState({ pickedDay: dayObject, isOverlayVisible: true });
+  renderLongtapOverlay = () => {
+    return this.renderDeleteOverlay();
   };
 
-  handleLongtap = (dayObject) => {
+  renderTapOverlay = () => {
+    const pickedDay = this.state.pickedDay ? this.state.pickedDay.dateString : null;
+    const filteredTrainings = this.state.userData.trainings.filter((training) => training.placed.includes(pickedDay));
+    return filteredTrainings.length > 0 ? this.renderViewOverlay() : this.renderPickerOverlay();
+  };
+
+  handleLongtapDay = (dayObject) => {
     this.setState({ pickedDay: dayObject, isLongtapOverlayVisible: true });
+  };
+
+  handleTapDay = (dayObject) => {
+    this.setState({ pickedDay: dayObject, isTapOverlayVisible: true });
   };
 
   renderCalendar = () => {
@@ -193,15 +278,17 @@ class CalendarScreen extends React.Component {
         minDate={new Date()}
         maxDate={(new Date()).setMonth((new Date()).getMonth() + 1)}
         onDayPress={(day) => {
-          console.log('selected day', day);
-          this.handleDayTap(day);
+          this.handleTapDay(day);
+
         }}
         onDayLongPress={(day) => {
+          console.log('selected day', day);
           if (this.state.markedDates[day.dateString]) {
-            this.handleLongtap(day);
+            this.handleLongtapDay(day);
           } else {
             console.log('long tap on empty day');
           }
+
         }}
         monthFormat={'MMMM yyyy'}
         onMonthChange={(month) => {
@@ -229,8 +316,8 @@ class CalendarScreen extends React.Component {
     if (!this.state.isLoading) {
       return (
         <View style={styles.container}>
-          {this.renderPresetOverlay()}
-          {this.renderLongtapPresetOverlay()}
+          {this.renderLongtapOverlay()}
+          {this.renderTapOverlay()}
           {this.renderCalendar()}
         </View>
       );
@@ -244,6 +331,9 @@ const styles = new StyleSheet.create({
   container: {
     flex: 1,
     marginTop: 30,
+  },
+  subView: {
+    alignSelf: 'center',
   },
 });
 export default CalendarScreen;
