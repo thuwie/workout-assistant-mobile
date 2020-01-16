@@ -1,4 +1,3 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import {
   AsyncStorage,
@@ -8,14 +7,12 @@ import {
   TouchableOpacity,
   Text,
 } from 'react-native';
-import TouchableScale from 'react-native-touchable-scale';
 import colors from '../../../constants/Colors';
 import { ListItem, Overlay } from 'react-native-elements';
 import { withNavigation } from 'react-navigation';
 import FormTextInput from '../../../components/FormTextInput';
 import strings from '../../../constants/strings/en_Strings';
 import methods from '../../../constants/Methods';
-import system from '../../../constants/System';
 import Button from '../../../components/Button';
 import request from '../../../utils/customRequest';
 
@@ -186,13 +183,13 @@ const styles = StyleSheet.create({
     borderColor: '#d6d7da',
   },
   item: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.GREY,
-    borderWidth: 1,
-    borderRadius: 10,
     padding: 2,
     marginLeft: 10,
     marginRight: 10,
     marginTop: 30,
+    fontWeight: 'bold',
   },
   itemTitle: {
     fontSize: 32,
