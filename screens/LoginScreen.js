@@ -54,40 +54,16 @@ class LoginScreen extends React.Component {
     this.setState({ password });
   };
 
-  // TODO: global storage interface
-  buildDateIndex = async (userTrainings) => {
-    const dateIndex = [];
-    userTrainings.forEach((trainingItem, _id) => {
-      const currDates = trainingItem.placed;
-      currDates.forEach((currDate) => {
-        const timestamp_tmp = Date.parse(currDate);
-        const data = { timestamp: timestamp_tmp, train_id: _id };
-        dateIndex.push(data);
-      });
-    });
-    dateIndex.sort((a, b) => {
-      return a.timestamp - b.timestamp;
-    });
-    await AsyncStorage.setItem('@train_date_index', JSON.stringify(dateIndex));
-  };
-
   loadUserData = async () => {
     const usrUrl = global.apiUrl + '/user/' + global.userId;
-    const exerciseUrl = global.apiUrl + '/exercise/search?userId=' + global.userId;
     try {
 
       const usrBody = await request(usrUrl, 'GET');
-      const exerciseBody = await request(exerciseUrl, 'GET');
 
       delete usrBody['password'];
       delete usrBody['__v'];
 
       await AsyncStorage.setItem('@user_data', JSON.stringify(usrBody));
-      await AsyncStorage.setItem('@exercise_storage', JSON.stringify(exerciseBody));
-      await AsyncStorage.setItem('@user_id', global.userId);
-      await AsyncStorage.setItem('@access_token', global.accessToken);
-      await this.buildDateIndex(usrBody.trainings);
-
 
       this.props.navigation.navigate('Start');
     } catch (error) {

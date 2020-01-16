@@ -17,9 +17,9 @@ import colors from "../../../constants/Colors";
 
 
 const getUpdatedSelectedItemsArray = (selectedItems, id) => {
-  const marked = [id];
+  const forDeletion = [id];
   if (selectedItems.includes(id)) {
-    return selectedItems.filter(item => !marked.includes(item));
+    return selectedItems.filter(item => !forDeletion.includes(item));
   }
   selectedItems.push(id);
   return selectedItems;
@@ -32,8 +32,7 @@ class CurrentTrain extends React.Component {
     this.state = {
       isLoading: true,
       trainData: {},
-      nextSelected: 0,
-      exercises: []
+      selectedItems: [],
     };
   }
 
@@ -49,64 +48,52 @@ class CurrentTrain extends React.Component {
     }
   }
 
-  renderAvatar = (exercise) => {
-    const {name, icon} = exercise;
-    if (icon) {
-      return (
-        <Avatar
-          rounded
-          size='medium'
-          source={{uri: icon}}
-        />
-      );
-    } else {
-      return (
-        <Avatar
-          rounded
-          size='medium'
-          title={`${name.substring(0, 3).toUpperCase()}`}
-          titleStyle={{fontSize: 14}}
-        />
-      );
-    }
-  };
-
-  keyExtractor = (item) => item._id.toString();
-  fakeExtractor = (num) => num.key.toString();
+  keyExtractor = (item) => item.id.toString();
+  selectedKeyExtractor = (num) => num.id;
 
   populateRepetition(exerciseData) {
     let repeatData = [];
-    const innerData = exerciseData.excerciseDictionaryData;
-    const init = exerciseData.weight;
-    const step = innerData.weightStep;
-    const repCount = exerciseData.repetitionCount;
+    const definitionData = exerciseData.definition;
+    const fullData = exerciseData.exerciseFullData;
+    const uniqId = definitionData.name;
+
+    const init = fullData.weight;
+    const step = definitionData.weightStep;
+    const repCount = fullData.repetitionCount;
     let counter = init;
-    repeatData.push({key: init, isChecked: false});
+    let objId = uniqId.substr(0, uniqId.length) + counter.toString();
+    repeatData.push({id: objId, key: init});
     for (let i = 1; i < repCount; ++i) {
       counter += step;
-      repeatData.push({key: counter, isChecked: false});
+      objId = uniqId.substr(0, uniqId.length) + counter.toString();
+      repeatData.push({id: objId, key: counter});
     }
     return repeatData;
   }
 
-  repetitionOnPressHandler = (data) => {
-    let idx = this.state.nextSelected;
-    data[++idx].isChecked = true;
-    console.log(idx);
-    this.setState({nextSelected: idx});
-  };
+  repetitionElementOnPress(id) {
+    let prevSelectedItems = this.state.selectedItems;
+    const newSelectedItems = getUpdatedSelectedItemsArray(prevSelectedItems, id);
+    this.setState({selectedItems: newSelectedItems});
+  }
 
+  checkIfExists(key) {
+    return this.state.selectedItems.includes(key);
+  }
 
   renderRepetitionEntity = ({item}) => {
+    let style = { backgroundColor: this.checkIfExists(item.id) ? colors.LIGHT_BLUE : colors.TORCH_RED };
     return (<ListItem
       Component={TouchableOpacity}
       color={() => item.isChecked ? colors.LIGHT_BLUE : colors.TORCH_RED}
       title={item.key.toString()}
+      style={style}
+      onPress={() => this.repetitionElementOnPress(item.id) }
     />)
   };
 
   printOrderedList = (item) => {
-    const innerData = item.excerciseDictionaryData;
+    const innerData = item.definition;
     let repeatData = this.populateRepetition(item);
     return (
       <View>
@@ -122,7 +109,7 @@ class CurrentTrain extends React.Component {
             horizontal={true}
             data={repeatData}
             renderItem={this.renderRepetitionEntity}
-            keyExtractor={this.fakeExtractor}
+            keyExtractor={this.selectedKeyExtractor}
           />
         </TouchableOpacity>
       </View>)
@@ -132,10 +119,14 @@ class CurrentTrain extends React.Component {
     return this.printOrderedList(item);
   };
 
+  goBackToHomePress() {
+    this.props.navigation.goBack();
+  }
+
   renderFooter = () => {
     return (<Button
-      title='Cancel'
-      onPress={() => this.props.navigation.navigate('Home', {canceled: true})}
+      title='Finish Training'
+      onPress={() => this.goBackToHomePress()}
     />)
   };
 
@@ -143,10 +134,11 @@ class CurrentTrain extends React.Component {
     return (
       <View style={styles.container}>
         <FlatList
-          data={trainData.preset.exercises}
+          data={trainData.trainData}
           renderItem={this.renderListItem}
           keyExtractor={this.keyExtractor}
           ListFooterComponent={this.renderFooter}
+          extraData={this.state}
         />
       </View>);
   };
