@@ -1,19 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
-import {
-  AsyncStorage,
-  FlatList,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {AsyncStorage, FlatList, StyleSheet, TouchableOpacity, View,} from 'react-native';
 import {withNavigation} from 'react-navigation';
-import {Avatar, ListItem, Button} from "react-native-elements";
+import {Avatar, Button, ListItem} from "react-native-elements";
 import colors from "../../../constants/Colors";
+import request from "../../../utils/customRequest";
+import methods from "../../../constants/Methods";
 
 
 const getUpdatedSelectedItemsArray = (selectedItems, id) => {
@@ -42,8 +33,10 @@ class CurrentTrain extends React.Component {
   async componentDidMount() {
     try {
       const trainData = this.props.navigation.getParam('trainData');
+      const userData = this.props.navigation.getParam('userData');
       this.setState({
         trainData: trainData,
+        userData: userData,
         isLoading: false
       });
     } catch (err) {
@@ -122,15 +115,31 @@ class CurrentTrain extends React.Component {
     return this.printOrderedList(item);
   };
 
-  goBackToHomePress() {
-    this.props.navigation.state.params.onGoBack();
-    this.props.navigation.goBack();
-  }
+  deleteCurrentTraining = async (trainId) => {
+    const url = `${global.apiUrl}/training/${trainId}`;
+    const userUrl = `${global.apiUrl}/user/${global.userId}`;
+    const userData = this.state.userData;
+    const trainings = userData.trainings.filter((training) => training._id !== trainId);
+    userData.trainings = trainings;
+    try {
+      await request(url, methods.DELETE);
+      await request(userUrl, methods.PUT, { trainings });
+      await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  renderFooter = () => {
+  goBackToHomePress = async (trainId) => {
+    await this.deleteCurrentTraining(trainId);
+    await this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack();
+  };
+
+  renderFooter = (trainId) => {
     return (<Button
       title='Finish Training'
-      onPress={() => this.goBackToHomePress()}
+      onPress={async () => await this.goBackToHomePress(trainId)}
     />)
   };
 
@@ -141,7 +150,7 @@ class CurrentTrain extends React.Component {
           data={trainData.trainData}
           renderItem={this.renderListItem}
           keyExtractor={this.keyExtractor}
-          ListFooterComponent={this.renderFooter}
+          ListFooterComponent={() => this.renderFooter(trainData.trainId)}
           extraData={this.state}
         />
       </View>);

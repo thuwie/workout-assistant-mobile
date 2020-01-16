@@ -3,17 +3,12 @@ import React from 'react';
 import {
   AsyncStorage,
   FlatList,
-  Image,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
 import {Avatar, ListItem, Button} from "react-native-elements";
-import colors from "../../../constants/Colors";
 import request from "../../../utils/customRequest";
 
 
@@ -49,21 +44,34 @@ class HomeScreen extends React.Component {
     }
   };
 
-  getNextTraining() {
-    let currentDate = new Date().setHours(0, 0, 0, 0);
+  getNextTraining(timePoint = null) {
+    let currentDate = {};
+    if(timePoint === null)
+      currentDate = new Date().setHours(0, 0, 0, 0);
+    else
+      currentDate = timePoint;
     const trainings = this.state.userData.trainings;
+    if(trainings.length === 0)
+      return undefined;
     const exercisesDictionary = this.state.exerciseDictionaryData;
+    if(exercisesDictionary.length === 0)
+      return undefined;
     const nextTraining = trainings.filter((train) => Date.parse(train.placed[0]) >= currentDate);
+    if(nextTraining.length === 0)
+      return undefined;
     const presetId = nextTraining[0].presetId;
     const preset = this.state.userData.presets.filter((preset) => preset._id === presetId);
+    if(preset.length === 0)
+      return undefined;
     let actualExercises = {
+      trainId: nextTraining[0]._id,
       agendaDate: nextTraining[0].placed[0],
       presetName: preset[0].name,
       trainData: [],
     };
     preset[0].exercises.forEach((exerciseId) => {
       const exerciseFullData = this.state.exerciseData.filter((exercise) => exercise._id === exerciseId);
-      const exerciseDefinition = this.state.exerciseDictionaryData.filter((definition) =>
+      const exerciseDefinition = exercisesDictionary.filter((definition) =>
         definition._id === exerciseFullData[0].exerciseDictionaryId);
       const exercise = {
         id: exerciseFullData[0]._id,
@@ -133,7 +141,7 @@ class HomeScreen extends React.Component {
   renderScreen = (trainData) => {
     return (
       <View style={styles.container}>
-        <Text h1>Next training</Text>
+        <Text h1 style={styles.title}>Agenda</Text>
         <Text h2>{trainData.agendaDate}</Text>
         <Text h3>{trainData.presetName}</Text>
         <FlatList
@@ -144,8 +152,9 @@ class HomeScreen extends React.Component {
           extraData={this.state}
         />
         <Button
-          title="Start"
+          title="Start Training"
           onPress={() => this.props.navigation.navigate('CurrentTrain', {
+            userData: this.state.userData,
             trainData: trainData,
             onGoBack: (param) => this.refreshTrainigData(),
           })}
@@ -159,7 +168,9 @@ class HomeScreen extends React.Component {
       return (<View/>);
     const nextTrain = this.getNextTraining();
     if (nextTrain === undefined)
-      return (<View/>);
+      return (<View style={styles.container}>
+        <Text h1 style={styles.happyMessage}>There are no trainings today, enjoy your day!</Text>
+      </View>);
     return this.renderScreen(nextTrain);
   }
 
@@ -173,6 +184,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'column',
   },
+  happyMessage: {
+    fontSize: 35,
+  },
+  title: {
+    fontSize: 25,
+  }
 });
 
 export default withNavigation(HomeScreen);
