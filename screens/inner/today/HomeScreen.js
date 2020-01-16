@@ -35,10 +35,11 @@ class HomeScreen extends React.Component {
       const exerciseData = await request(exerciseUrl, 'GET');
 
       const userData = await AsyncStorage.getItem('@user_data');
-      this.setState({ userData: JSON.parse(userData)});
-      this.setState({exerciseDictionaryData: exerciseDictionaryData});
-      this.setState({exerciseData:exerciseData});
-
+      this.setState({
+        userData: JSON.parse(userData),
+        exerciseDictionaryData,
+        exerciseData,
+      });
     } catch (err) {
       console.log(err);
     }
@@ -56,7 +57,9 @@ class HomeScreen extends React.Component {
     const exercisesDictionary = this.state.exerciseDictionaryData;
     if(exercisesDictionary.length === 0)
       return undefined;
-    const nextTraining = trainings.filter((train) => Date.parse(train.placed[0]) >= currentDate);
+    const nextTraining = trainings
+      .sort((a, b) => Date.parse(a.placed[0]) - Date.parse(b.placed[0]))
+      .filter((train) => Date.parse(train.placed[0]) >= currentDate);
     if(nextTraining.length === 0)
       return undefined;
     const presetId = nextTraining[0].presetId;
@@ -89,8 +92,8 @@ class HomeScreen extends React.Component {
 
   async componentDidMount() {
     try {
-      await this.loadTrainingsData();
       this.props.navigation.addListener('willFocus', async () => { this.updateStorage();} );
+      await this.loadTrainingsData();
       this.setState({isLoading: false});
     } catch (err) {
       console.log(err);

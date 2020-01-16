@@ -25,8 +25,13 @@ class CalendarScreen extends React.Component {
     }
   };
 
+  updateStorage = async () => {
+    await this.loadData();
+  };
+
   async componentDidMount() {
     try {
+      this.props.navigation.addListener('willFocus', async () => { this.updateStorage();} );
       await this.loadData();
       this.setState({ isLoading: false });
     } catch (err) {
