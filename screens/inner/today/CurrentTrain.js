@@ -26,6 +26,9 @@ const getUpdatedSelectedItemsArray = (selectedItems, id) => {
 };
 
 class CurrentTrain extends React.Component {
+  static navigationOptions = {
+    header: null,
+  };
 
   constructor(props) {
     super(props);
@@ -120,6 +123,7 @@ class CurrentTrain extends React.Component {
   };
 
   goBackToHomePress() {
+    this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack();
   }
 

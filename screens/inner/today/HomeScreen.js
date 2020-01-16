@@ -142,7 +142,7 @@ class HomeScreen extends React.Component {
           title="Start"
           onPress={() => this.props.navigation.navigate('CurrentTrain', {
             trainData: trainData,
-            goBack: (param) => this.refreshTrainigData(),
+            onGoBack: (param) => this.refreshTrainigData(),
           })}
         />
       </View>);
