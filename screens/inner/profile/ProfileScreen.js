@@ -1,9 +1,10 @@
 import React from 'react';
 import {
   Platform,
+  Text,
   StyleSheet,
   View,
-  AsyncStorage, StatusBar, ScrollView,
+  AsyncStorage, StatusBar, ScrollView, TouchableOpacity,
 } from 'react-native';
 
 import { ListItem, Icon, Avatar } from 'react-native-elements';
@@ -44,7 +45,7 @@ class ProfileScreen extends React.Component {
   handleExitButton = async () => {
     console.log('click');
     global.userId = '';
-    global.accessToken='';
+    global.accessToken = '';
     await AsyncStorage.removeItem('@user_id');
     await AsyncStorage.removeItem('@access_token');
     this.props.navigation.navigate('Login');
@@ -53,20 +54,7 @@ class ProfileScreen extends React.Component {
   loadData = async () => {
     try {
       const value = await AsyncStorage.getItem('@user_data');
-      // const value = '{firstName: "test", secondName:"test"}';
       this.setState({ userData: JSON.parse(value) });
-      // this.setState({
-      //   userData: {
-      //     firstName: 'kir',
-      //     secondName: 'kon',
-      //     username: 'mock',
-      //     email: 'mail',
-      //     height: 200,
-      //     weight: 201,
-      //     goal: 202,
-      //     birthDate: '2000-01-01',
-      //   },
-      // });
     } catch (err) {
       console.log(err);
     }
@@ -76,6 +64,7 @@ class ProfileScreen extends React.Component {
     return (
       <Avatar
         size='large'
+        containerStyle={{ alignSelf: 'center', marginLeft: 40 }}
         rounded
         title={`${(this.state.userData.firstName[0]).toUpperCase()}${(this.state.userData.secondName[0]).toUpperCase()}`}
       />
@@ -86,52 +75,52 @@ class ProfileScreen extends React.Component {
     const { firstName, secondName, username, birthDate, weight, height, goal, email } = this.state.userData;
     return (
       <View>
-          <ListItem
-            key={0}
-            title={'@'+username}
-            bottomDivider
-          />
-          <ListItem
-            key={1}
-            title={firstName}
-            subtitle={'First name'}
-            bottomDivider
-          />
-          <ListItem
-            key={2}
-            title={secondName}
-            subtitle={'Second name'}
-            bottomDivider
-          />
-          <ListItem
-            key={3}
-            title={email}
-            subtitle={'Email'}
-            bottomDivider
-          />
-          <ListItem
-            key={4}
-            title={birthDate}
-            subtitle={'Birth date'}
-            bottomDivider
-          />
-          <ListItem
-            key={5}
-            title={height}
-            subtitle={'Height'}
-            bottomDivider
-          />
-          <ListItem
-            key={6}
-            title={weight}
-            subtitle={'Weight'}
-            bottomDivider
-          />
-          <ListItem
-            key={7}
-            title={goal}
-            subtitle={'Goal'}
-          />
+        <ListItem
+          key={0}
+          title={'@' + username}
+          bottomDivider
+        />
+        <ListItem
+          key={1}
+          title={firstName}
+          subtitle={'First name'}
+          bottomDivider
+        />
+        <ListItem
+          key={2}
+          title={secondName}
+          subtitle={'Second name'}
+          bottomDivider
+        />
+        <ListItem
+          key={3}
+          title={email}
+          subtitle={'Email'}
+          bottomDivider
+        />
+        <ListItem
+          key={4}
+          title={birthDate.substring(0, 10)}
+          subtitle={'Birth date'}
+          bottomDivider
+        />
+        <ListItem
+          key={5}
+          title={height}
+          subtitle={'Height'}
+          bottomDivider
+        />
+        <ListItem
+          key={6}
+          title={weight}
+          subtitle={'Weight'}
+          bottomDivider
+        />
+        <ListItem
+          key={7}
+          title={goal}
+          subtitle={'Goal'}
+        />
       </View>
     );
   };
@@ -148,14 +137,21 @@ class ProfileScreen extends React.Component {
               backgroundColor="#FFFFFF"
             />
             <View style={styles.headContainer}>
-              <View style={[styles.headSubContainer, { alignItems: 'flex-end' }]}>
-                <Icon onPress={this.handleSettingsButton} size={35} color={colors.GREY} containerStyle={styles.icon}
-                      name={'settings'}/>
-                <Icon onPress={this.handleExitButton} size={35} color={colors.GREY} containerStyle={styles.icon}
-                      name={'exit'}/>
+              <View style={[styles.headSubContainer, { alignItems: 'flex-start' }]}>
+                <TouchableOpacity>
+                  <Icon onPress={this.handleExitButton} size={35} color={colors.GREY}
+                        containerStyle={styles.icon}
+                        name={'exit-to-app'}/>
+                </TouchableOpacity>
               </View>
-              <View style={styles.headSubContainer}>
+              <View style={[styles.headSubContainer, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+                <View></View>
                 {this.renderAvatar()}
+                <TouchableOpacity>
+                  <Icon onPress={this.handleSettingsButton} size={25} color={colors.GREY}
+                        containerStyle={[styles.icon, { alignSelf: 'flex-end' }]}
+                        name={'create'}/>
+                </TouchableOpacity>
               </View>
             </View>
             <View style={styles.infoContainer}>
@@ -177,6 +173,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 35,
     padding: 20,
     flex: 1,
     flexDirection: 'column',

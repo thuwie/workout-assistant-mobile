@@ -6,7 +6,7 @@ import {
   Platform,
   StyleSheet,
   StatusBar,
-  TouchableWithoutFeedback,
+  TouchableOpacity,
   Keyboard,
   ScrollView,
   KeyboardAvoidingView, AsyncStorage,
@@ -26,36 +26,51 @@ import request from '../../../utils/customRequest';
 class ProfileSettingsScreen extends React.Component {
   static navigationOptions = ({ navigation, screenProps }) => ({
     headerLeft: (
-      <Icon
-        containerStyle={styles.icon}
-        type="ionicon"
-        name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
-        onPress={() => navigation.navigate('Profile')}
-      />
+      <TouchableOpacity>
+        <View style={styles.iconContainer}>
+          <Icon
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
+            onPress={() => navigation.navigate('Profile')}
+          />
+        </View>
+      </TouchableOpacity>
     ),
     headerRight: (
-      <View style={styles.iconContainer}>
-        <Icon
-          type="ionicon"
-          name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
-          onPress={async () => {
-            const { params = {} } = navigation.state;
-            const { userData = {} } = params;
-            console.log(userData);
-            try {
-              await this.saveToStorage(userData);
-              const response = await this.updateUser(userData);
-              if (response.error) {
-                throw new Error('Unauthorized');
+      <TouchableOpacity>
+        <View style={styles.iconContainer}>
+          <Icon
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
+            onPress={async () => {
+              const { params = {} } = navigation.state;
+              const { userData = {} } = params;
+              console.log(userData);
+              try {
+                await this.saveToStorage(userData);
+                const response = await this.updateUser(userData);
+                if (response.error) {
+                  throw new Error('Unauthorized');
+                }
+                navigation.navigate('Profile', { updated: true });
+                console.log(response);
+              } catch (error) {
+                console.log(error);
               }
-              navigation.navigate('Profile', { updated: true });
-              console.log(response);
-            } catch (error) {
-              console.log(error);
-            }
-          }}/>
-      </View>
+            }}/>
+        </View>
+      </TouchableOpacity>
     ),
+    headerStyle: {
+      backgroundColor: 0,
+      borderBottomWidth: 0,
+      shadowOpacity: 0,
+      shadowOffset: {
+        height: 0,
+      },
+      shadowRadius: 0,
+      elevation: 0,
+    }
   });
 
   async componentDidMount() {
@@ -133,10 +148,7 @@ class ProfileSettingsScreen extends React.Component {
 
   renderUsername = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Username
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
           value={this.state.userData.username}
@@ -148,16 +160,16 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Username
+        </Text>
       </View>
     );
   };
 
   renderFirstname = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          First name
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
           value={this.state.userData.firstName}
@@ -168,16 +180,16 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          First name
+        </Text>
       </View>
     );
   };
 
   renderSecondname = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Second name
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
           value={this.state.userData.secondName}
@@ -188,16 +200,16 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Second name
+        </Text>
       </View>
     );
   };
 
   renderEmail = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Email
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
           value={this.state.userData.email}
@@ -208,16 +220,16 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Email
+        </Text>
       </View>
     );
   };
 
   renderBirthday = () => {
     return (
-      <View style={{ marginBottom: 38 }}>
-        <Text style={styles.name}>
-          Birth date
-        </Text>
+      <View style={[{ marginBottom: 38 }, styles.subContainer]}>
         <DatePicker
           style={{ width: '100%' }}
           date={this.state.userData.birthDate}
@@ -237,26 +249,28 @@ class ProfileSettingsScreen extends React.Component {
               flex: 1,
               alignItems: 'flex-start',
               width: '100%',
-              borderBottomWidth: StyleSheet.hairlineWidth,
               marginTop: 0,
               paddingLeft: 10,
+            },
+            dateText: {
+              fontSize: 20,
             },
           }}
           onDateChange={this.handleBirthDateChange}
         />
+        <Text style={styles.name}>
+          Birth date
+        </Text>
       </View>
     );
   };
 
   renderHeight = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Height
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
-          value={`${this.state.userData.height}`}
+          value={`${this.state.userData.height || ' '}`}
           onChangeText={this.handleHeightChange}
           placeholder={strings.HEIGHT_PLACEHOLDER}
           autoCorrect={false}
@@ -265,19 +279,19 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Height
+        </Text>
       </View>
     );
   };
 
   renderWeight = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Weight
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
-          value={`${this.state.userData.weight}`}
+          value={`${this.state.userData.weight || ' '}`}
           onChangeText={this.handleWeightChange}
           placeholder={strings.WEIGHT_PLACEHOLDER}
           autoCorrect={false}
@@ -287,19 +301,19 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Weight
+        </Text>
       </View>
     );
   };
 
   renderGoal = () => {
     return (
-      <View>
-        <Text style={styles.name}>
-          Goal
-        </Text>
+      <View style={styles.subContainer}>
         <FormTextInput
           style={styles.textViewStyle}
-          value={`${this.state.userData.goal}`}
+          value={`${this.state.userData.goal || ' '}`}
           onChangeText={this.handleGoalChange}
           placeholder={strings.GOAL_PLACEHOLDER}
           autoCorrect={false}
@@ -309,6 +323,9 @@ class ProfileSettingsScreen extends React.Component {
           onSubmitEditing={this.handleKeyDown}
           blurOnSubmit={system.IS_IOS}
         />
+        <Text style={styles.name}>
+          Goal
+        </Text>
       </View>
     );
   };
@@ -321,7 +338,6 @@ class ProfileSettingsScreen extends React.Component {
             barStyle="dark-content"
             backgroundColor="#FFFFFF"
           />
-          {this.renderUsername()}
           {this.renderFirstname()}
           {this.renderSecondname()}
           {this.renderEmail()}
@@ -337,28 +353,38 @@ class ProfileSettingsScreen extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
+      justifyContent: 'center',
+      alignItems: 'stretch',
+      padding: 20,
       marginTop: 20,
       flex: 1,
       backgroundColor: colors.WHITE,
-      alignItems: 'stretch',
-      justifyContent: 'space-around',
-    },
-    icon: {
-      paddingLeft: 10,
     },
     iconContainer: {
       flexDirection: 'row',
       justifyContent: 'space-evenly',
       width: 60,
     },
+    subContainer: {
+      borderColor: colors.SILVER,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      width: '100%',
+      flex: 2,
+      marginBottom: 20,
+    },
     name: {
-      fontWeight: 'bold',
-      fontSize: 18,
+      fontSize: 14,
       color: colors.GREY,
       paddingLeft: 10,
+      marginBottom: 10,
     },
     textViewStyle: {
       paddingLeft: 5,
+      height: 30,
+      borderColor: colors.SILVER,
+      fontSize: 20,
+      borderBottomWidth: 0,
+      marginBottom: 2,
     },
   },
 );
