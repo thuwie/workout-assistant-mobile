@@ -200,6 +200,7 @@ class CalendarScreen extends React.Component {
         windowBackgroundColor="rgba(0, 0, 0, .5)"
         width="80%"
         height="auto"
+        transparent={false}
         onBackdropPress={() => {
           this.setState({ isTapOverlayVisible: false, pickedDay: null });
         }}
@@ -219,7 +220,8 @@ class CalendarScreen extends React.Component {
         isVisible={this.state.isTapOverlayVisible}
         windowBackgroundColor="rgba(0, 0, 0, .5)"
         width="80%"
-        height="auto"
+        height="80%"
+        transparent={false}
         onBackdropPress={() => {
           this.setState({ isTapOverlayVisible: false, pickedDay: null });
         }}
@@ -241,6 +243,7 @@ class CalendarScreen extends React.Component {
         windowBackgroundColor="rgba(0, 0, 0, .5)"
         width="80%"
         height="auto"
+        transparent={false}
         onBackdropPress={() => {
           this.setState({ isLongtapOverlayVisible: false, pickedDay: null });
         }}
