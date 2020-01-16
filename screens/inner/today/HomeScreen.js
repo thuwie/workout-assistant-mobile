@@ -75,14 +75,19 @@ class HomeScreen extends React.Component {
     return actualExercises;
   }
 
+  updateStorage = async () => {
+    await this.loadTrainingsData();
+  };
+
   async componentDidMount() {
     try {
       await this.loadTrainingsData();
+      this.props.navigation.addListener('willFocus', async () => { this.updateStorage();} );
       this.setState({isLoading: false});
     } catch (err) {
       console.log(err);
     }
-  }
+  };
 
   refreshTrainigData = async (navigationData) => {
     try {
