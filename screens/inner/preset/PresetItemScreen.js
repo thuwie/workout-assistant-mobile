@@ -22,41 +22,58 @@ class PresetItemScreen extends React.Component {
   static navigationOptions = ({ navigation, screenProps }) => ({
     title: `Edit: ${navigation.state.params.itemData.name}`,
     headerLeft: (
-      <Icon
-        containerStyle={styles.icon}
-        type="ionicon"
-        name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
-        onPress={() => navigation.navigate('Preset')}
-      />
+      <TouchableOpacity>
+        <View style={styles.iconContainer}>
+          <Icon
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-close' : 'md-close'}
+            onPress={() => {
+              navigation.goBack();
+            }}
+          />
+        </View>
+      </TouchableOpacity>
     ),
     headerRight: (
-      <View style={styles.iconContainer}>
-        <Icon
-          type="ionicon"
-          name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
-          onPress={async () => {
-            const { params = {} } = navigation.state;
-            const { itemData = {}, exercises } = params;
-            if (exercises) {
-              console.log(exercises);
-              const exercisesUrl = `${global.apiUrl}/exercise/`;
-              const promises = exercises.map((exercise) => {
-                return request(exercisesUrl + exercise._id, methods.PUT, { ...exercise });
-              });
-              await Promise.all(promises);
-            }
-            const url = `${global.apiUrl}/preset/${itemData._id}`;
-            try {
-              await request(url, methods.PUT, itemData);
-            } catch (err) {
-              console.log(err);
-            }
-            await navigation.state.params.goBack(itemData);
-            navigation.goBack();
-            navigation.navigate('Preset', { updated: true, itemData });
-          }}/>
-      </View>
+      <TouchableOpacity>
+        <View style={styles.iconContainer}>
+          <Icon
+            type="ionicon"
+            name={Platform.OS === 'ios' ? 'ios-checkmark' : 'md-checkmark'}
+            onPress={async () => {
+              const { params = {} } = navigation.state;
+              const { itemData = {}, exercises } = params;
+              if (exercises) {
+                console.log(exercises);
+                const exercisesUrl = `${global.apiUrl}/exercise/`;
+                const promises = exercises.map((exercise) => {
+                  return request(exercisesUrl + exercise._id, methods.PUT, { ...exercise });
+                });
+                await Promise.all(promises);
+              }
+              const url = `${global.apiUrl}/preset/${itemData._id}`;
+              try {
+                await request(url, methods.PUT, itemData);
+              } catch (err) {
+                console.log(err);
+              }
+              await navigation.state.params.goBack(itemData);
+              navigation.goBack();
+              // navigation.navigate('Preset', { updated: true, itemData });
+            }}/>
+        </View>
+      </TouchableOpacity>
     ),
+    headerStyle: {
+      backgroundColor: 0,
+      borderBottomWidth: 0,
+      shadowOpacity: 0,
+      shadowOffset: {
+        height: 0,
+      },
+      shadowRadius: 0,
+      elevation: 0,
+    },
   });
 
   constructor(props) {
@@ -169,6 +186,7 @@ class PresetItemScreen extends React.Component {
         isVisible={this.state.isOverlayVisible}
         windowBackgroundColor="rgba(0, 0, 0, .5)"
         width="80%"
+        transparent={false}
         height="auto"
         onBackdropPress={() => {
           this.setState({ isOverlayVisible: false });
@@ -215,7 +233,7 @@ class PresetItemScreen extends React.Component {
         <View style={[styles.subView]}>
           {this.renderAvatar(dictionaryItem)}
         </View>
-        <View style={styles.subView}>
+        <View style={[styles.subView, {width: 95 }]}>
           <View>
             <Text>{name}</Text>
           </View>
@@ -283,7 +301,7 @@ class PresetItemScreen extends React.Component {
     return (
       <Picker
         selectedValue={this.state.exercises[id].repetitionCount}
-        style={{ height: 50, width: 75 }}
+        style={{ height: 50, width: 95 }}
         onValueChange={(itemValue, itemIndex) => {
           const exercises = this.state.exercises;
           exercises[id].repetitionCount = itemValue;
@@ -354,6 +372,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     paddingLeft: 10,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    width: 60,
   },
   subView: {
     alignSelf: 'center',
