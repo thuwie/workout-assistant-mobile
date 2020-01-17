@@ -8,9 +8,24 @@ import {
   View,
 } from 'react-native';
 import {withNavigation} from 'react-navigation';
+import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import {Avatar, ListItem, Button} from "react-native-elements";
 import request from "../../../utils/customRequest";
 
+const monthMap = [
+  "January", "February", "March",
+  "April", "May", "June", "July",
+  "August", "September", "October",
+  "November", "December"
+];
+
+const formatDate = (date) => {
+  const day = date.getDate();
+  const monthIndex = date.getMonth();
+  const year = date.getFullYear();
+
+  return day + ' ' + monthMap[monthIndex] + ' ' + year;
+};
 
 class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -23,6 +38,8 @@ class HomeScreen extends React.Component {
       isLoading: true,
       userData: {},
       selectedItems: [],
+      timePoint: {},
+      today: new Date(),
     };
   }
 
@@ -39,33 +56,49 @@ class HomeScreen extends React.Component {
         userData: JSON.parse(userData),
         exerciseDictionaryData,
         exerciseData,
+        timePoint: new Date(),
       });
     } catch (err) {
       console.log(err);
     }
   };
 
-  getNextTraining(timePoint = null) {
+  getNextTraining(timePoint, strongOrder) {
     let currentDate = {};
-    if(timePoint === null)
-      currentDate = new Date().setHours(0, 0, 0, 0);
+    if(!timePoint)
+      currentDate = new Date();
     else
       currentDate = timePoint;
     const trainings = this.state.userData.trainings;
     if(trainings.length === 0)
-      return undefined;
+      return null;
     const exercisesDictionary = this.state.exerciseDictionaryData;
     if(exercisesDictionary.length === 0)
-      return undefined;
-    const nextTraining = trainings
-      .sort((a, b) => Date.parse(a.placed[0]) - Date.parse(b.placed[0]))
-      .filter((train) => Date.parse(train.placed[0]) >= currentDate);
+      return null;
+    let nextTraining = {};
+    if(strongOrder) {
+      nextTraining = trainings
+        .sort((a, b) => Date.parse(a.placed[0]) - Date.parse(b.placed[0]))
+        .filter((train) => {
+          let date = new Date(Date.parse(train.placed[0])).setHours(0, 0, 0, 0);
+          let curDate = new Date(currentDate).setHours(0, 0, 0, 0);
+          return date === curDate;
+        });
+    } else {
+      nextTraining = trainings
+        .sort((a, b) => Date.parse(a.placed[0]) - Date.parse(b.placed[0]))
+        .filter((train) => {
+          let date = new Date(Date.parse(train.placed[0])).setHours(0, 0, 0, 0);
+          let curDate = new Date(currentDate).setHours(0, 0, 0, 0);
+          return date >= curDate;
+        });
+    }
     if(nextTraining.length === 0)
-      return undefined;
+      return null;
     const presetId = nextTraining[0].presetId;
     const preset = this.state.userData.presets.filter((preset) => preset._id === presetId);
     if(preset.length === 0)
-      return undefined;
+      return null;
     let actualExercises = {
       trainId: nextTraining[0]._id,
       agendaDate: nextTraining[0].placed[0],
@@ -94,13 +127,16 @@ class HomeScreen extends React.Component {
     try {
       this.props.navigation.addListener('willFocus', async () => { this.updateStorage();} );
       await this.loadTrainingsData();
-      this.setState({isLoading: false});
+      this.setState({
+        isLoading: false,
+        timePoint: new Date(),
+      });
     } catch (err) {
       console.log(err);
     }
   };
 
-  refreshTrainigData = async (navigationData) => {
+  refreshTrainingData = async (navigationData) => {
     try {
       await this.loadTrainingsData();
     } catch (err) {
@@ -141,12 +177,73 @@ class HomeScreen extends React.Component {
       />)
   };
 
-  renderScreen = (trainData) => {
+  onSwipeLeft = (agendaDate) => {
+    let tomorrow = new Date(agendaDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.setState({timePoint: tomorrow});
+  };
+
+  onSwipeRight = (agendaDate) => {
+    if(agendaDate <= this.state.today)
+      return;
+    let yesterday = new Date(agendaDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    this.setState({timePoint: yesterday});
+  };
+
+  renderButton(trainData) {
+    const agendaDate = new Date(trainData.agendaDate);
+    if(agendaDate.getTime() > this.state.today)
+      return(<View/>);
+    if(agendaDate.getTime() < this.state.today)
+      return(<View/>);
+    return(
+      <Button
+        title="Start Training"
+        onPress={() => this.props.navigation.navigate('CurrentTrain', {
+          userData: this.state.userData,
+          trainData: trainData,
+          onGoBack: (param) => this.refreshTrainingData(),
+        })}
+      />
+    )
+  }
+
+  renderNextScheduleDate(timePoint) {
+    if(!timePoint)
+      return(<Text style={styles.title}>Setup new train on the Calendar page.</Text>);
+    return(
+      <Text style={styles.title}>Next training date: {timePoint}.</Text>
+    );
+  };
+
+  renderScreen = () => {
+    const trainData = this.getNextTraining(this.state.timePoint, true);
+    const mayBeNext = this.getNextTraining(this.state.timePoint, false);
+    let timePoint = {};
+    if (!trainData) {
+      timePoint = formatDate(new Date(this.state.timePoint));
+      let mayBeNextTimePoint = (mayBeNext) ? formatDate(new Date(mayBeNext.agendaDate)) : null;
+      return (<GestureRecognizer style={styles.container}
+                                 onSwipeLeft={() => this.onSwipeLeft(this.state.timePoint)}
+                                 onSwipeRight={() => this.onSwipeRight(this.state.timePoint)}
+        ><View>
+          <Text h1 style={styles.happyMessage}>There are no trainings for {timePoint}!</Text>
+          {this.renderNextScheduleDate(mayBeNextTimePoint)}
+        </View>
+        </GestureRecognizer>
+      );
+    }
+    timePoint = formatDate(new Date(trainData.agendaDate));
     return (
-      <View style={styles.container}>
-        <Text h1 style={styles.title}>Agenda</Text>
-        <Text h2>{trainData.agendaDate}</Text>
-        <Text h3>{trainData.presetName}</Text>
+      <GestureRecognizer style={styles.container}
+                         onSwipeLeft={() => this.onSwipeLeft(trainData.agendaDate)}
+                         onSwipeRight={() => this.onSwipeRight(trainData.agendaDate)}
+      >
+      <View>
+        <Text style={styles.title}>This day agenda</Text>
+        <Text style={styles.title}>{timePoint}</Text>
+        <Text style={styles.title}>{trainData.presetName}</Text>
         <FlatList
           horizontal={true}
           data={trainData.trainData}
@@ -154,27 +251,17 @@ class HomeScreen extends React.Component {
           keyExtractor={this.keyExtractor}
           extraData={this.state}
         />
-        <Button
-          title="Start Training"
-          onPress={() => this.props.navigation.navigate('CurrentTrain', {
-            userData: this.state.userData,
-            trainData: trainData,
-            onGoBack: (param) => this.refreshTrainigData(),
-          })}
-        />
-      </View>);
+        {this.renderButton(trainData)}
+      </View>
+      </GestureRecognizer>
+    );
   };
 
 
   render() {
     if (this.state.isLoading)
       return (<View/>);
-    const nextTrain = this.getNextTraining();
-    if (nextTrain === undefined)
-      return (<View style={styles.container}>
-        <Text h1 style={styles.happyMessage}>There are no trainings today, enjoy your day!</Text>
-      </View>);
-    return this.renderScreen(nextTrain);
+    return this.renderScreen();
   }
 
 }
@@ -186,12 +273,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
+    zIndex: 1,
   },
   happyMessage: {
     fontSize: 35,
   },
   title: {
     fontSize: 25,
+  },
+  subTitle: {
+    fontSize: 15,
   }
 });
 
