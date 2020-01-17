@@ -77,14 +77,16 @@ class LoginScreen extends React.Component {
     const url = global.apiUrl + '/login';
     try {
       const body = await request(url, 'POST', { username, password });
+      if (body.error) {
+        return;
+      }
+      if(!body.accessToken) {
+        return
+      }
       global.accessToken = body.accessToken;
       global.userId = body.userId;
       await AsyncStorage.setItem('@user_id', body.userId);
       await AsyncStorage.setItem('@accessToken', body.accessToken);
-      console.log(body);
-      if (body.error) {
-        return;
-      }
       await this.loadUserData();
     } catch (error) {
       console.log(error);
