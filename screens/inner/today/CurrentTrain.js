@@ -1,10 +1,10 @@
 import React from 'react';
-import {AsyncStorage, FlatList, StyleSheet, TouchableOpacity, View,} from 'react-native';
-import {withNavigation} from 'react-navigation';
-import {Avatar, Button, ListItem} from "react-native-elements";
-import colors from "../../../constants/Colors";
-import request from "../../../utils/customRequest";
-import methods from "../../../constants/Methods";
+import { AsyncStorage, FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { withNavigation } from 'react-navigation';
+import { Avatar, Button, ListItem } from 'react-native-elements';
+import colors from '../../../constants/Colors';
+import request from '../../../utils/customRequest';
+import methods from '../../../constants/Methods';
 
 
 const getUpdatedSelectedItemsArray = (selectedItems, id) => {
@@ -37,7 +37,7 @@ class CurrentTrain extends React.Component {
       this.setState({
         trainData: trainData,
         userData: userData,
-        isLoading: false
+        isLoading: false,
       });
     } catch (err) {
       console.log(err);
@@ -58,11 +58,11 @@ class CurrentTrain extends React.Component {
     const repCount = fullData.repetitionCount;
     let counter = init;
     let objId = uniqId.substr(0, uniqId.length) + counter.toString();
-    repeatData.push({id: objId, key: init});
+    repeatData.push({ id: objId, key: init });
     for (let i = 1; i < repCount; ++i) {
       counter += step;
       objId = uniqId.substr(0, uniqId.length) + counter.toString();
-      repeatData.push({id: objId, key: counter});
+      repeatData.push({ id: objId, key: counter });
     }
     return repeatData;
   }
@@ -70,48 +70,57 @@ class CurrentTrain extends React.Component {
   repetitionElementOnPress(id) {
     let prevSelectedItems = this.state.selectedItems;
     const newSelectedItems = getUpdatedSelectedItemsArray(prevSelectedItems, id);
-    this.setState({selectedItems: newSelectedItems});
+    console.log(newSelectedItems);
+    this.setState({ selectedItems: newSelectedItems });
   }
 
   checkIfExists(key) {
     return this.state.selectedItems.includes(key);
   }
 
-  renderRepetitionEntity = ({item}) => {
-    let style = { backgroundColor: this.checkIfExists(item.id) ? colors.LIGHT_BLUE : colors.TORCH_RED };
-    return (<ListItem
-      Component={TouchableOpacity}
-      color={() => item.isChecked ? colors.LIGHT_BLUE : colors.TORCH_RED}
-      title={item.key.toString()}
-      style={style}
-      onPress={() => this.repetitionElementOnPress(item.id) }
-    />)
+  renderRepetitionEntity = ({ item }) => {
+   /* let style = {
+      backgroundColor: this.checkIfExists(item.id) ? colors.GREY: colors.WHITE,
+      borderRadius: 25,
+    };*/
+
+    let titleStyle = {
+      color: this.checkIfExists(item.id) ? colors.GREY : colors.BLACK,
+    };
+    return (
+      <ListItem
+        Component={TouchableOpacity}
+        title={item.key.toString()}
+        titleStyle={titleStyle}
+        onPress={() => this.repetitionElementOnPress(item.id)}
+      />
+    );
   };
 
   printOrderedList = (item) => {
     const innerData = item.definition;
     let repeatData = this.populateRepetition(item);
     return (
-      <View>
-        <TouchableOpacity
-          style={styles.item}>
-          <Avatar
-            rounded
-            size='medium'
-            title={`${innerData.name.substring(0, 3).toUpperCase()}`}
-            titleStyle={{fontSize: 14}}
-          />
-          <FlatList
-            horizontal={true}
-            data={repeatData}
-            renderItem={this.renderRepetitionEntity}
-            keyExtractor={this.selectedKeyExtractor}
-          />
-        </TouchableOpacity>
-      </View>)
+      <View style={styles.item}>
+
+        <Avatar
+          rounded
+          size='medium'
+          containerStyle={{marginRight: 15}}
+          title={`${innerData.name.substring(0, 3).toUpperCase()}`}
+          titleStyle={{ fontSize: 14 }}
+        />
+        <FlatList
+          horizontal={true}
+          data={repeatData}
+          renderItem={this.renderRepetitionEntity}
+          keyExtractor={this.selectedKeyExtractor}
+        />
+      </View>
+    );
   };
 
-  renderListItem = ({item}) => {
+  renderListItem = ({ item }) => {
     return this.printOrderedList(item);
   };
 
@@ -137,29 +146,41 @@ class CurrentTrain extends React.Component {
   };
 
   renderFooter = (trainId) => {
-    return (<Button
-      title='Finish Training'
-      onPress={async () => await this.goBackToHomePress(trainId)}
-    />)
+    return (
+      <Button
+        containerStyle={styles.button}
+        title='Finish Training'
+        onPress={async () => await this.goBackToHomePress(trainId)}
+      />
+    );
   };
 
   renderScreen = (trainData) => {
     return (
-      <View style={styles.container}>
+      <View>
         <FlatList
           data={trainData.trainData}
           renderItem={this.renderListItem}
           keyExtractor={this.keyExtractor}
-          ListFooterComponent={() => this.renderFooter(trainData.trainId)}
           extraData={this.state}
         />
-      </View>);
+      </View>
+    );
   };
 
   render() {
-    if (this.state.isLoading)
+    if (this.state.isLoading) {
       return (<View/>);
-    return this.renderScreen(this.state.trainData);
+    }
+    return (
+      <View style={styles.container}>
+        <ScrollView>
+          {this.renderScreen(this.state.trainData)}
+        </ScrollView>
+        {this.renderFooter(this.state.trainData.trainId)}
+      </View>
+    );
+
   }
 
 }
@@ -167,9 +188,15 @@ class CurrentTrain extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 100,
+    marginHorizontal: 40,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
+  },
+  button: {
+    marginBottom: 50,
+    alignSelf: 'center',
   },
   item: {
     padding: 15,
