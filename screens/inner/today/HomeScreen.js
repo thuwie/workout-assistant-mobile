@@ -184,7 +184,9 @@ class HomeScreen extends React.Component {
   };
 
   onSwipeRight = (agendaDate) => {
-    if(agendaDate <= this.state.today)
+    const prevDate = new Date(agendaDate).setHours(0,0,0,0);
+    const nextDate = new Date(this.state.today).setHours(0,0,0,0);
+    if(prevDate <= nextDate)
       return;
     let yesterday = new Date(agendaDate);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -193,10 +195,12 @@ class HomeScreen extends React.Component {
 
   renderButton(trainData) {
     const agendaDate = new Date(trainData.agendaDate);
-    if(agendaDate.getTime() > this.state.today)
+    const prevDate = new Date(agendaDate).setHours(0,0,0,0);
+    const nextDate = new Date(this.state.today).setHours(0,0,0,0);
+    if(prevDate > nextDate)
       return(<View/>);
-    if(agendaDate.getTime() < this.state.today)
-      return(<View/>);
+    // if(agendaDate.getTime() < this.state.today)
+    //   return(<View/>);
     return(
       <Button
         title="Start Training"
@@ -237,8 +241,8 @@ class HomeScreen extends React.Component {
     timePoint = formatDate(new Date(trainData.agendaDate));
     return (
       <GestureRecognizer style={styles.container}
-                         onSwipeLeft={() => this.onSwipeLeft(trainData.agendaDate)}
-                         onSwipeRight={() => this.onSwipeRight(trainData.agendaDate)}
+                         onSwipeLeft={() => this.onSwipeLeft(this.state.timePoint)}
+                         onSwipeRight={() => this.onSwipeRight(this.state.timePoint)}
       >
       <View>
         <Text style={styles.title}>This day agenda</Text>
